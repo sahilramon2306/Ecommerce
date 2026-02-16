@@ -1,0 +1,205 @@
+/* ===============================
+   NAVBAR CONTAINER
+================================= */
+.navbar {
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-bottom: 1px solid #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+/* ===============================
+   LOGO (Image + Text)
+================================= */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: white;
+  letter-spacing: -0.4px;
+  transition: color 0.2s ease;
+}
+
+.logo:hover {
+  color: #60a5fa;
+}
+
+.logo-img {
+  height: 42px;   /* Balanced for 70px navbar */
+  width: auto;
+  border-radius: 50%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+}
+
+/* ===============================
+   USER INFO & LOGOUT
+================================= */
+.username {
+  color: #fff;
+  margin-right: 15px;
+  font-weight: 500;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #ff4d4d;
+}
+
+/* ===============================
+   NAV LINKS
+================================= */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  color: #cbd5e1;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: white;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -6px;
+  left: 0;
+  background-color: #60a5fa;
+  transition: width 0.25s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 100%;
+}
+
+/* ===============================
+   HAMBURGER (Mobile)
+================================= */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1100;
+}
+
+.hamburger span {
+  width: 100%;
+  height: 3px;
+  background-color: #e2e8f0;
+  border-radius: 2px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===============================
+   MOBILE RESPONSIVE
+================================= */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 70px;
+    right: 0;
+    bottom: 0;
+    width: 80%;
+    max-width: 320px;
+    background-color: #0f172a;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 24px;
+    gap: 24px;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 25px rgba(0, 0, 0, 0.4);
+  }
+
+  .nav-links.active {
+    transform: translateX(0);
+  }
+
+  /* Hamburger → X animation */
+  .hamburger.active span:nth-child(1) {
+    transform: translateY(8.5px) rotate(45deg);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: translateY(-8.5px) rotate(-45deg);
+  }
+
+  .nav-links a {
+    font-size: 1.15rem;
+    width: 100%;
+  }
+
+  .nav-links a::after {
+    bottom: -8px;
+  }
+}
+
+/* ===============================
+   VERY SMALL SCREENS
+================================= */
+@media (max-width: 400px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .logo {
+    font-size: 1.35rem;
+  }
+
+  .logo-img {
+    height: 36px;
+  }
+}
