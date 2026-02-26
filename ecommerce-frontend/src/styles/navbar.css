@@ -1,108 +1,151 @@
-/* ===============================
-   NAVBAR CONTAINER
-================================= */
+/* navbar.css - Final Modern Navbar with Responsive Search */
+
+:root {
+  --nav-bg: #0f172a;
+  --nav-text: #f1f5f9;
+  --nav-border: #1e293b;
+  --nav-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  --primary: #3b82f6;
+  --radius: 8px;
+  --transition: all 0.25s ease;
+}
+
 .navbar {
   height: 70px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
-  background-color: #0f172a;
-  color: #f1f5f9;
-  border-bottom: 1px solid #1e293b;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  border-bottom: 1px solid var(--nav-border);
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  box-shadow: var(--nav-shadow);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* ===============================
-   LOGO (Image + Text)
-================================= */
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   color: white;
-  letter-spacing: -0.4px;
-  transition: color 0.2s ease;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.logo-img {
+  height: 42px;
+  width: auto;
+  border-radius: 50%;
+  object-fit: contain;
 }
 
 .logo:hover {
   color: #60a5fa;
 }
 
-.logo-img {
-  height: 42px;   /* Balanced for 70px navbar */
-  width: auto;
-  border-radius: 50%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
+/* Search Form */
+.search-form {
+  flex: 1;
+  max-width: 420px;
+  margin: 0 2rem;
+  position: relative;
 }
 
-.logo-img:hover {
-  transform: scale(1.05);
+.search-input {
+  width: 100%;
+  padding: 0.7rem 1rem 0.7rem 3rem;
+  border: none;
+  border-radius: 50px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition);
 }
 
-/* ===============================
-   USER INFO & LOGOUT
-================================= */
-.username {
-  color: #fff;
-  margin-right: 15px;
-  font-weight: 500;
+.search-input::placeholder {
+  color: #94a3b8;
 }
 
-.logout-btn {
+.search-input:focus {
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.search-btn {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
-  color: white;
+  color: #94a3b8;
+  font-size: 1.25rem;
   cursor: pointer;
-  font-size: 16px;
-  transition: color 0.2s ease;
 }
 
-.logout-btn:hover {
-  color: #ff4d4d;
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-/* ===============================
-   NAV LINKS
-================================= */
+.hamburger span {
+  width: 100%;
+  height: 3px;
+  background: var(--nav-text);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+.hamburger.active span:nth-child(1) { transform: translateY(8.5px) rotate(45deg); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: translateY(-8.5px) rotate(-45deg); }
+
+/* Nav Links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 2rem;
 }
 
 .nav-links a {
-  color: #cbd5e1;
-  font-size: 1rem;
-  font-weight: 500;
+  color: var(--nav-text);
   text-decoration: none;
-  transition: color 0.2s ease;
+  font-weight: 500;
+  font-size: 1.02rem;
   position: relative;
+  transition: var(--transition);
 }
 
 .nav-links a:hover,
 .nav-links a.active {
-  color: white;
+  color: #60a5fa;
 }
 
 .nav-links a::after {
-  content: "";
+  content: '';
   position: absolute;
   width: 0;
   height: 2px;
   bottom: -6px;
   left: 0;
-  background-color: #60a5fa;
-  transition: width 0.25s ease;
+  background: var(--primary);
+  transition: width 0.3s ease;
 }
 
 .nav-links a:hover::after,
@@ -110,34 +153,64 @@
   width: 100%;
 }
 
-/* ===============================
-   HAMBURGER (Mobile)
-================================= */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 28px;
-  height: 20px;
-  background: transparent;
+/* User Section */
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.username {
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.logout-btn {
+  padding: 0.55rem 1.25rem;
+  background: #ef4444;
+  color: white;
   border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  z-index: 1100;
+  transition: var(--transition);
 }
 
-.hamburger span {
-  width: 100%;
-  height: 3px;
-  background-color: #e2e8f0;
-  border-radius: 2px;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+.logout-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
-/* ===============================
-   MOBILE RESPONSIVE
-================================= */
+/* Theme Toggle */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--nav-text);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 1.15rem;
+  transition: var(--transition);
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.1);
+}
+
+/* ====================== MOBILE ====================== */
 @media (max-width: 768px) {
+  /* Hide the text, keep the image to free up space for the search bar */
+  .logo span {
+    display: none; 
+  }
+
+  .search-form {
+    margin: 0 1rem;
+    max-width: none;
+    flex: 1; /* Let it flexibly fill the newly freed space */
+  }
+
   .hamburger {
     display: flex;
   }
@@ -147,59 +220,41 @@
     top: 70px;
     right: 0;
     bottom: 0;
-    width: 80%;
-    max-width: 320px;
-    background-color: #0f172a;
+    width: 280px;
+    background: var(--nav-bg);
     flex-direction: column;
     align-items: flex-start;
-    padding: 32px 24px;
-    gap: 24px;
+    padding: 2rem 1.5rem;
+    gap: 1.75rem;
     transform: translateX(100%);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: -10px 0 25px rgba(0, 0, 0, 0.4);
+    transition: transform 0.35s ease;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
   }
 
   .nav-links.active {
     transform: translateX(0);
   }
 
-  /* Hamburger → X animation */
-  .hamburger.active span:nth-child(1) {
-    transform: translateY(8.5px) rotate(45deg);
-  }
-
-  .hamburger.active span:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-
-  .hamburger.active span:nth-child(3) {
-    transform: translateY(-8.5px) rotate(-45deg);
-  }
-
-  .nav-links a {
-    font-size: 1.15rem;
+  .user-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
     width: 100%;
   }
 
-  .nav-links a::after {
-    bottom: -8px;
+  .logout-btn {
+    width: 100%;
+    text-align: center;
   }
 }
 
-/* ===============================
-   VERY SMALL SCREENS
-================================= */
-@media (max-width: 400px) {
+/* Very small screens */
+@media (max-width: 420px) {
   .navbar {
-    padding: 0 16px;
+    padding: 0 1rem;
   }
-
-  .logo {
-    font-size: 1.35rem;
-  }
-
-  .logo-img {
-    height: 36px;
+  
+  .search-form {
+    margin: 0 0.5rem;
   }
 }

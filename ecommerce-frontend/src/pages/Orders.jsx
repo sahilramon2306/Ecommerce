@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { getMyOrders } from "../api/orderApi";
+import { useNavigate } from "react-router-dom";
 import "../styles/orders.css";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getMyOrders()
       .then((res) => {
         setOrders(res.data?.data || []);
       })
-      .catch((err) => {
-        console.error("Orders error:", err);
+      .catch(() => {
         setOrders([]);
       })
       .finally(() => setLoading(false));
@@ -26,6 +27,7 @@ const Orders = () => {
     );
   }
 
+  /* ================= EMPTY STATE ================= */
   if (!orders.length) {
     return (
       <div className="orders-wrapper empty-orders">
@@ -46,16 +48,16 @@ const Orders = () => {
             </svg>
           </div>
 
-          <h2>No orders yet</h2>
+          <h2>No Orders Yet</h2>
 
           <p className="empty-orders-message">
-            You haven't placed any orders.<br />
-            Start shopping and get your first order today!
+            You haven't placed any orders yet.  
+            Start exploring our premium collection today.
           </p>
 
           <button
             className="start-shopping-btn"
-            onClick={() => window.location.href = "/"}
+            onClick={() => navigate("/")}
           >
             Start Shopping
           </button>
@@ -64,14 +66,18 @@ const Orders = () => {
     );
   }
 
+  /* ================= ORDERS LIST ================= */
   return (
     <div className="orders-wrapper">
       <h2>My Orders</h2>
 
       {orders.map((order) => (
         <div key={order._id} className="order-card">
+
           <div className="order-header">
-            <div className="order-id">Order #{order._id.slice(-8)}</div>
+            <div className="order-id">
+              Order #{order._id.slice(-8)}
+            </div>
             <div className="order-date">
               {new Date(order.createdAt).toLocaleDateString("en-IN", {
                 day: "numeric",
@@ -84,35 +90,36 @@ const Orders = () => {
           <div className="order-items">
             {order.items.map((item, index) => {
               const product = item.productId || {};
+              const price =
+                product.salePrice ||
+                product.price ||
+                item.price ||
+                0;
+
               return (
                 <div key={index} className="order-item">
-                  <div className="order-item-image">
-                    <img
-                      src={
-                        product.images?.[0]
-                          ? product.images[0]
-                          : "https://via.placeholder.com/90x90?text=No+Image"
-                      }
-                      alt={product.name || "Product"}
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/90x90?text=Error";
-                      }}
-                    />
-                  </div>
+                  <img
+                    src={
+                      product.images?.[0] ||
+                      "https://via.placeholder.com/100"
+                    }
+                    alt={product.name || "Product"}
+                  />
 
                   <div className="order-item-info">
-                    <div className="item-name">{product.name || "Product"}</div>
+                    <div className="item-name">
+                      {product.name || "Product"}
+                    </div>
                     <div className="item-meta">
                       <span>Qty: {item.quantity}</span>
                       <span>
-                        ₹{(product.salePrice || product.price || item.price || 0).toLocaleString("en-IN")}
+                        ₹{price.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
 
                   <div className="item-subtotal">
-                    ₹{((product.salePrice || product.price || item.price || 0) * item.quantity).toLocaleString("en-IN")}
+                    ₹{(price * item.quantity).toLocaleString("en-IN")}
                   </div>
                 </div>
               );
@@ -121,15 +128,18 @@ const Orders = () => {
 
           <div className="order-footer">
             <div className="order-total">
-              Total: <strong>₹{order.totalAmount?.toLocaleString("en-IN")}</strong>
+              ₹{order.totalAmount?.toLocaleString("en-IN")}
             </div>
 
             <div className="order-status">
-              <span className={`status-badge status-${(order.orderStatus || "placed").toLowerCase()}`}>
+              <span
+                className={`status-badge status-${(order.orderStatus || "placed").toLowerCase()}`}
+              >
                 {order.orderStatus || "Placed"}
               </span>
+
               <span className="payment-info">
-                {order.paymentStatus || "Pending"} ({order.paymentType || "—"})
+                {order.paymentStatus || "Pending"} • {order.paymentType || "—"}
               </span>
             </div>
           </div>

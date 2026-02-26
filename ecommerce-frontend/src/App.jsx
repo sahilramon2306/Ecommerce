@@ -1,18 +1,32 @@
 import Navbar from "./components/Navbar";
 import AppRoutes from "./routes/AppRoutes";
+import GlobalListener from "./components/GlobalListener";
 import { Toaster } from 'react-hot-toast';
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { ClipLoader } from 'react-spinners';
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   return (
     <>
-      <Navbar />
+      <Navbar theme={theme} toggleTheme={toggleTheme} />
+      <GlobalListener />
 
-      {/* Global loading fallback for lazy routes / components */}
       <Suspense fallback={
         <div className="global-loading">
-          <ClipLoader color="#2563eb" size={60} speedMultiplier={0.9} />
+          <ClipLoader color="#2563eb" size={60} />
           <p>Loading...</p>
         </div>
       }>
@@ -21,14 +35,8 @@ function App() {
         </main>
       </Suspense>
 
-      {/* Toast notifications */}
       <Toaster
         position="top-center"
-        reverseOrder={false}
-        gutter={16}
-        containerStyle={{
-          marginTop: '70px', // space below navbar
-        }}
         toastOptions={{
           duration: 4500,
           style: {
@@ -37,34 +45,6 @@ function App() {
             color: '#f1f5f9',
             padding: '14px 22px',
             fontSize: '16px',
-            maxWidth: '480px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.35)',
-          },
-          success: {
-            style: {
-              background: '#10b981',
-              color: 'white',
-            },
-            iconTheme: {
-              primary: 'white',
-              secondary: '#10b981',
-            },
-          },
-          error: {
-            style: {
-              background: '#ef4444',
-              color: 'white',
-            },
-            iconTheme: {
-              primary: 'white',
-              secondary: '#ef4444',
-            },
-          },
-          loading: {
-            style: {
-              background: '#374151',
-              color: '#f3f4f6',
-            },
           },
         }}
       />
@@ -72,4 +52,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;   

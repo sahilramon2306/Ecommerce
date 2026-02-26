@@ -12,6 +12,7 @@ const setRouter = (app) => {
     app.post("/upload-Product-Images/:productId", authMiddleware, adminMiddleware, upload.array("images", 5), productController.uploadProductImages);
     app.get("/list-All-Products-Admin", authMiddleware, adminMiddleware, productController.listAllProductsAdmin);
     app.get("/list-All-Products-Public", productController.listAllProductsPublic);
+    app.get("/search-products", productController.searchProducts);
     app.get("/get-Single-Product-Details/:productId", productController.getSingleProductDetails);
     app.put("/update-Product-Stock/:productId", authMiddleware, adminMiddleware, productController.updateProductStock);
     app.put("/update-Product-Status/:productId", authMiddleware, adminMiddleware, productController.updateProductStatus);

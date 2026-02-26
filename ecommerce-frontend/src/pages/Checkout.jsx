@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import axiosInstance from "../api/axiosInstance";
 import { createRazorpayOrder, verifyPayment } from "../api/paymentApi";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +7,10 @@ import "../styles/checkout.css";
 
 const Checkout = () => {
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState(null);
+  const [paymentType, setPaymentType] = useState("ONLINE");
 
   const [address, setAddress] = useState({
     name: "",
@@ -26,7 +29,7 @@ const Checkout = () => {
         setCart(cartRes.data.data);
 
         const userRes = await axiosInstance.get("/get-User-Profile");
-        const user = userRes.data.user;
+        const user = userRes.data.data;
 
         const defaultAddress =
           user.addresses?.find((a) => a.isDefault) || user.addresses?.[0];
@@ -43,7 +46,7 @@ const Checkout = () => {
           });
         }
       } catch (err) {
-        console.error("Error fetching checkout data:", err);
+        console.error(err);
       }
     };
 
@@ -60,232 +63,152 @@ const Checkout = () => {
   const placeOrder = async (e) => {
     e.preventDefault();
 
-    const form = e.target;
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
     try {
       setLoading(true);
 
-      // Step 1: Create order on backend
       const orderRes = await axiosInstance.post("/create-Order-From-Cart", {
-        paymentType: "ONLINE",
+        paymentType,
         address,
       });
 
       const orderId = orderRes.data.data._id;
 
-      // Step 2: Create Razorpay order
+      // COD Flow
+      if (paymentType === "COD") {
+        toast.success("Order placed successfully!");
+        setTimeout(() => navigate("/orders"), 1000);
+        return;
+      }
+
+      // ONLINE Flow
       const razorpayRes = await createRazorpayOrder(orderId);
       const { id, amount } = razorpayRes.data.data;
 
-      // Step 3: Razorpay options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount,
         currency: "INR",
         name: "Sahil Ecommerce",
-        description: "Order Payment",
+        description: "Secure Payment",
         order_id: id,
-
         handler: async function (response) {
-          try {
-            await verifyPayment(response);
-            alert("Payment Successful 🎉");
-            navigate("/orders");
-          } catch (verificationError) {
-            console.error("Payment verification failed:", verificationError);
-            alert("Payment verification failed. Please contact support.");
-          }
+          await verifyPayment(response);
+          toast.success("Payment Successful 🎉");
+          setTimeout(() => navigate("/orders"), 1000);
         },
-
-        modal: {
-          ondismiss: () => {
-            alert("Payment was cancelled");
-          },
-        },
-
-        theme: {
-          color: "#3399cc",
-        },
+        theme: { color: "#111827" },
       };
 
       const razor = new window.Razorpay(options);
       razor.open();
-    } catch (error) {
-      console.error("Payment flow error:", error);
-      alert(error.response?.data?.message || "Payment failed. Please try again.");
+
+    } catch (err) {
+      toast.error("Payment failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!cart) return <div className="checkout-loading">Loading checkout...</div>;
+  if (!cart) return <div className="checkout-loading">Loading...</div>;
 
   return (
-    <div className="checkout-container">
-      <div className="checkout-left">
-        <h2>Shipping Address</h2>
+    <div className="checkout-wrapper">
 
-        <form onSubmit={placeOrder}>
-          <div className="form-group">
-            <label htmlFor="name">
-              Full Name <span className="required">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              value={address.name}
-              onChange={handleChange}
-              placeholder="Full Name"
-              required
-              autoComplete="name"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="phone">
-              Phone Number <span className="required">*</span>
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={address.phone}
-              onChange={handleChange}
-              placeholder="Phone"
-              required
-              autoComplete="tel"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="addressLine">
-              Address Line <span className="required">*</span>
-            </label>
-            <input
-              id="addressLine"
-              name="addressLine"
-              value={address.addressLine}
-              onChange={handleChange}
-              placeholder="House no, Street, Area"
-              required
-              autoComplete="address-line1"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="city">
-              City <span className="required">*</span>
-            </label>
-            <input
-              id="city"
-              name="city"
-              value={address.city}
-              onChange={handleChange}
-              placeholder="City"
-              required
-              autoComplete="address-level2"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="district">
-              District <span className="required">*</span>
-            </label>
-            <input
-              id="district"
-              name="district"
-              value={address.district}
-              onChange={handleChange}
-              placeholder="District"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="state">
-              State <span className="required">*</span>
-            </label>
-            <input
-              id="state"
-              name="state"
-              value={address.state}
-              onChange={handleChange}
-              placeholder="State"
-              required
-              autoComplete="address-level1"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="pincode">
-              Pincode <span className="required">*</span>
-            </label>
-            <input
-              id="pincode"
-              name="pincode"
-              value={address.pincode}
-              onChange={handleChange}
-              placeholder="Pincode"
-              required
-              maxLength={6}
-              pattern="[0-9]{6}"
-              title="Please enter a valid 6-digit Indian PIN code"
-              autoComplete="postal-code"
-            />
-          </div>
-
-          <p className="form-hint">
-            <span className="required">*</span> Required fields
-          </p>
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Processing..." : "Pay Now"}
-          </button>
-        </form>
+      {/* Step Header */}
+      <div className="checkout-steps">
+        <div className="step active">Cart</div>
+        <div className="step active">Address</div>
+        <div className="step">Payment</div>
+        <div className="step">Success</div>
       </div>
 
-      <div className="checkout-right">
-        <h2>Order Summary</h2>
+      <div className="checkout-container">
 
-        <div className="order-items-list">
-          {cart.items.map((item) => (
-            <div key={item.productId} className="summary-item">
-              <div className="summary-item-image">
+        {/* LEFT */}
+        <div className="checkout-left">
+          <h2>Shipping Details</h2>
+
+          <form onSubmit={placeOrder}>
+
+            {Object.keys(address).map((field) => (
+              <div className="floating-group" key={field}>
+                <input
+                  name={field}
+                  value={address[field]}
+                  onChange={handleChange}
+                  required
+                />
+                <label>{field.replace(/([A-Z])/g, " $1")}</label>
+              </div>
+            ))}
+
+            {/* Payment Method */}
+            <div className="payment-method">
+              <label className={`payment-option ${paymentType === "ONLINE" ? "selected" : ""}`}>
+                <input
+                  type="radio"
+                  value="ONLINE"
+                  checked={paymentType === "ONLINE"}
+                  onChange={(e) => setPaymentType(e.target.value)}
+                />
+                Online Payment
+              </label>
+
+              <label className={`payment-option ${paymentType === "COD" ? "selected" : ""}`}>
+                <input
+                  type="radio"
+                  value="COD"
+                  checked={paymentType === "COD"}
+                  onChange={(e) => setPaymentType(e.target.value)}
+                />
+                Cash on Delivery
+              </label>
+            </div>
+
+            <button type="submit" disabled={loading} className="pay-btn">
+              {loading
+                ? "Processing..."
+                : paymentType === "COD"
+                  ? "Place Order (COD)"
+                  : `Pay ₹${cart.grandTotal.toLocaleString("en-IN")}`}
+            </button>
+
+          </form>
+        </div>
+
+        {/* RIGHT */}
+        <div className="checkout-right">
+          <h3>Order Summary</h3>
+
+          <div className="order-items">
+            {cart.items.map((item) => (
+              <div className="summary-item" key={item.productId}>
                 <img
                   src={
-                    item.image || item.images?.[0]
-                      ? item.image || item.images[0]
-                      : "https://via.placeholder.com/80x80?text=No+Image"
+                    item.image ||
+                    item.images?.[0] ||
+                    "https://via.placeholder.com/80"
                   }
                   alt={item.name}
-                  loading="lazy"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/80x80?text=Error";
-                  }}
                 />
+                <div>
+                  <p>{item.name}</p>
+                  <span>× {item.quantity}</span>
+                </div>
+                <strong>
+                  ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                </strong>
               </div>
+            ))}
+          </div>
 
-              <div className="summary-item-info">
-                <div className="item-name">{item.name}</div>
-                <div className="item-qty">× {item.quantity}</div>
-              </div>
+          <div className="summary-total">
+            <span>Total</span>
+            <strong>₹{cart.grandTotal.toLocaleString("en-IN")}</strong>
+          </div>
 
-              <div className="item-price">
-                ₹{(item.price * item.quantity).toLocaleString("en-IN")}
-              </div>
-            </div>
-          ))}
         </div>
 
-        <div className="summary-total">
-          <strong>Total:</strong>
-          <strong>₹{cart.grandTotal?.toLocaleString("en-IN")}</strong>
-        </div>
       </div>
     </div>
   );

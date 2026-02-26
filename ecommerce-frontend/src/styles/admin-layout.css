@@ -1,0 +1,125 @@
+/* admin-layout.css - Ultra Premium Dynamic Admin Layout */
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --dark: #0f172a;
+  --dark-2: #1e2937;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --radius: 16px;
+  --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================= MAIN LAYOUT ================= */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ================= DARK SIDEBAR ================= */
+
+.admin-sidebar {
+  width: 280px;
+  background: var(--dark);
+  color: var(--text);
+  border-right: 1px solid var(--dark-2);
+  box-shadow: 4px 0 25px rgba(0,0,0,0.2);
+  transition: width var(--transition);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.admin-logo {
+  font-size: 1.75rem;
+  font-weight: 800;
+  padding: 2rem 1.5rem 1.5rem;
+  letter-spacing: -1px;
+  color: white;
+}
+
+/* Navigation */
+.admin-nav {
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.admin-link:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.admin-link.active {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.admin-content {
+  flex: 1;
+  padding: 2.5rem;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+/* ================= RESPONSIVE ================= */
+
+/* Desktop - Fixed Sidebar */
+@media (min-width: 1024px) {
+  .admin-sidebar {
+    position: relative;
+    transform: none;
+  }
+}
+
+/* Tablet & Mobile - Slide-in Overlay */
+@media (max-width: 1023px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform var(--transition);
+    z-index: 2000;
+    box-shadow: 15px 0 50px rgba(0,0,0,0.3);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-content {
+    padding: 1.5rem;
+  }
+}
+
+/* Very Small Screens */
+@media (max-width: 480px) {
+  .admin-content {
+    padding: 1rem;
+  }
+}

@@ -4,7 +4,6 @@ import axiosInstance from "../api/axiosInstance";
 import { logoutUser } from "../api/authApi";
 import "../styles/navbar.css";
 
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -13,45 +12,51 @@ const Navbar = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  /* ===============================
-     FETCH USER (CHECK AUTH)
-  =============================== */
   useEffect(() => {
-  console.log("Cookies:", document.cookie);
+    const token = localStorage.getItem("token");
 
-  const fetchUser = async () => {
-    try {
-      const res = await axiosInstance.get("/get-User-Profile");
-      if (res.data.success) {
-        setUser(res.data.user);
-      }
-    } catch {
+    // 🚀 Do not call API if user is not logged in
+    if (!token) {
       setUser(null);
+      return;
     }
-  };
 
-  fetchUser();
-}, []);
+    const fetchUser = async () => {
+      try {
+        const res = await axiosInstance.get("/get-User-Profile");
 
+        if (res.data?.data) {
+          setUser(res.data.data);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        // If token expired or invalid → clear it
+        localStorage.removeItem("token");
+        setUser(null);
+      }
+    };
 
-  /* ===============================
-     LOGOUT
-  =============================== */
+    fetchUser();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logoutUser();
     } catch (err) {
-      console.log("Logout error:", err);
+      console.error("Logout error:", err);
     } finally {
+      localStorage.removeItem("token");
       setUser(null);
       navigate("/login");
+      closeMenu();
     }
   };
 
   return (
     <nav className="navbar">
       <NavLink to="/" className="logo" onClick={closeMenu}>
-        <img src="/logo.png" alt="E-Commerce Logo" className="logo-img" />
+        <img src="/logo.png" alt="Logo" className="logo-img" />
         <span>S. ECOMMERCE</span>
       </NavLink>
 
@@ -76,10 +81,15 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            {/* 👤 USER NAME */}
-            <span className="username">
-              Hello, {user.name}
-            </span>
+            <NavLink to="/profile" onClick={closeMenu}>👤 Profile</NavLink>
+
+            {user.role === "admin" && (
+              <NavLink to="/admin/dashboard" onClick={closeMenu}>
+                ⚙️ Admin
+              </NavLink>
+            )}
+
+            <span className="username">Hello, {user.name}</span>
 
             <button className="logout-btn" onClick={handleLogout}>
               Logout

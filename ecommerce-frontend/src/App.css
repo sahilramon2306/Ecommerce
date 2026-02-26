@@ -1,14 +1,4 @@
-/* App.css - global layout & loading styles */
-
-:root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --bg: #f8fafc;
-  --text: #0f172a;
-  --muted: #64748b;
-  --radius: 12px;
-  --shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
+/* ================= GLOBAL RESET ================= */
 
 *,
 *::before,
@@ -21,12 +11,17 @@
 html,
 body {
   height: 100%;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg, #f8fafc);
+  color: var(--text, #0f172a);
+  overflow-x: hidden;
+}
+
+/* ================= ROOT STRUCTURE ================= */
 
 #root {
   min-height: 100vh;
@@ -34,44 +29,53 @@ body {
   flex-direction: column;
 }
 
-.main-content {
-  flex: 1;
-  padding: 2rem 1.5rem;
-  max-width: 1440px;
-  margin: 0 auto;
-  width: 100%;
+/* App Layout Wrapper */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* Global loading (Suspense fallback) */
+/* ================= MAIN CONTENT ================= */
+
+.main-content {
+  flex: 1; /* pushes footer to bottom */
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+/* ================= GLOBAL LOADING ================= */
+
 .global-loading {
-  min-height: calc(100vh - 80px); /* adjust for navbar */
+  flex: 1;
+  min-height: 70vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  background: rgba(248, 250, 252, 0.92);
-  backdrop-filter: blur(8px);
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
+  font-size: 1.2rem;
+  color: #64748b;
 }
 
-.global-loading p {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--muted);
+/* ================= SMOOTH THEME TRANSITION ================= */
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
   .main-content {
-    padding: 1.5rem 1rem;
+    padding: 2rem 1.5rem;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .main-content {
-    padding: 1rem 0.75rem;
+    padding: 1.5rem 1rem;
   }
 }

@@ -334,6 +334,29 @@ const listAllProductsPublic = async (req, res) => {
 };
 
 //------------------------------------------------------------------------------------------------------------
+// Search Products(Public)
+const searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        message: "Search query is required"
+      });
+    }
+
+    const products = await productModel.find({
+      name: { $regex: q, $options: "i" }
+    });
+
+    res.status(200).json({ data: products });
+  } catch (error) {
+    console.error("Search Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//------------------------------------------------------------------------------------------------------------
 // Get Single Product Details
 const getSingleProductDetails = async (req, res) => {
   try {
@@ -561,6 +584,7 @@ module.exports = {
   uploadProductImages: uploadProductImages,
   listAllProductsAdmin: listAllProductsAdmin,
   listAllProductsPublic: listAllProductsPublic,
+  searchProducts: searchProducts,
   getSingleProductDetails: getSingleProductDetails,
   updateProductStock: updateProductStock,
   updateProductStatus: updateProductStatus,
