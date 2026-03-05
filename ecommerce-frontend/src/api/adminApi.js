@@ -28,10 +28,11 @@ export const getOrderStatusSummary = (year) =>
 
 //============================================================================================
 // ADMIN PRODUCT API's
-export const getAllProductsAdmin = () => {
-  return axiosInstance.get("/list-All-Products-Admin");
+export const getAllProductsAdmin = (params) => {
+  return axiosInstance.get("/list-All-Products-Admin", {
+    params,
+  });
 };
-
 
 export const addProduct = (productData) => {
   return axiosInstance.post("/add-Product", productData);
@@ -80,3 +81,62 @@ export const updateProductStatus = (productId, statusData) => {
     statusData
   );
 };
+
+//============================================================================================
+// ADMIN ORDERS API's
+
+
+// Get all orders (pagination + search supported)
+export const getAllOrdersAdmin = (params) => {
+  return axiosInstance.get("/get-All-Orders-Admin", {
+    params,
+  });
+};
+
+// Get single order by ID
+export const getOrderByIdAdmin = (orderId) => {
+  return axiosInstance.get(
+    `/get-Order-By-Id-Admin/${orderId}`
+  );
+};
+
+// Update order status
+export const updateOrderStatusAdmin = (
+  orderId,
+  data
+) => {
+  return axiosInstance.put(
+    `/update-Order-Status-Admin/${orderId}`,
+    data
+  );
+};
+
+// Update payment status
+export const updatePaymentStatusAdmin = (
+  orderId,
+  data
+) => {
+  return axiosInstance.put(
+    `/update-Payment-Status-Admin/${orderId}`,
+    data
+  );
+};
+
+// Download invoice (returns file)
+export const getOrderInvoiceAdmin = (orderId) => {
+  return axiosInstance.get(
+    `/get-Order-Invoice-Admin/${orderId}`,
+    {
+      responseType: "blob", // Important for PDF
+    }
+  );
+};
+
+
+export const refundRazorpayPayment = (orderId) => {
+  return axiosInstance.post(
+    `/refund-Razorpay-Payment/${orderId}`
+  );
+};
+
+

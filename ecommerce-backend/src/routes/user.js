@@ -13,9 +13,9 @@ const setRouter = (app) => {
     app.get("/get-Single-Address-Of-User/:addressId", authMiddleware, userController.getSingleAddressOfUser);
     app.put("/update-Single-Address-Of-User/:addressId", authMiddleware, userController.updateSingleAddressOfUser);
     app.delete("/delete-Single-Address-Of-User/:addressId", authMiddleware, userController.deleteSingleAddressOfUser);
-    app.post("/forgot-Password", authMiddleware, userController.forgotPassword);
-    app.post("/verify-Reset-OTP", authMiddleware, userController.verifyResetOTP);
-    app.post("/reset-Password", authMiddleware, userController.resetPassword);
+    app.post("/forgot-Password", userController.forgotPassword);
+    app.post("/verify-Reset-OTP", userController.verifyResetOTP);
+    app.post("/reset-Password", userController.resetPassword);
     app.put("/change-Password", authMiddleware, userController.changePassword);
     app.post("/refresh-Token", authMiddleware, userController.refreshToken);
 };

@@ -255,7 +255,7 @@ const razorpayWebhook = async (req, res) => {
 };
 
 //--------------------------------------------------------------------------------------------------------
-// REFUND PAYMENT
+// REFUND PAYMENT (ADMIN)
 const refundRazorpayPayment = async (req, res) => {
   try {
     const { orderId } = req.params;

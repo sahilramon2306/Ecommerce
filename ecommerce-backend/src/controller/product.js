@@ -234,33 +234,62 @@ const uploadProductImages = async (req, res) => {
 // List All Products (Admin)
 const listAllProductsAdmin = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let {
+      page = 1,
+      limit = 10,
+      search = "",
+      sortBy = "createdAt",
+      order = "desc",
+      status = "all"
+    } = req.query;
+
+    // Convert to numbers
+    page = Number(page);
+    limit = Number(limit);
+
+    const query = {};
+
+    /* ================= SMOOTH SEARCH ================= */
+
+    if (search && search.trim() !== "") {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    /* ================= STATUS FILTER ================= */
+
+    if (status !== "all") {
+      query.isActive = status === "active";
+    }
+
+    /* ================= PAGINATION ================= */
 
     const skip = (page - 1) * limit;
 
     const products = await productModel
-      .find({})
-      .sort({ createdAt: -1 })
+      .find(query)
+      .sort({ [sortBy]: order === "asc" ? 1 : -1 })
       .skip(skip)
       .limit(limit);
 
-    const totalProducts = await productModel.countDocuments();
+    const totalProducts = await productModel.countDocuments(query);
 
     return res.status(200).json({
       success: true,
-      message: "Products fetched successfully",
       meta: {
         totalProducts,
-        currentPage: page,
         totalPages: Math.ceil(totalProducts / limit),
-        limit
+        currentPage: page
       },
       data: products
     });
 
   } catch (error) {
-    console.error("❌ listAllProductsAdmin error:", error);
+    console.error("Admin product list error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"

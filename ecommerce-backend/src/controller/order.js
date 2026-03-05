@@ -442,6 +442,7 @@ const getAllOrdersAdmin = async (req, res) => {
     console.log("▶️ Admin user:", req.user);
 
     const {
+      orderId, // <-- Added orderId here
       orderStatus,
       paymentStatus,
       paymentType,
@@ -451,6 +452,29 @@ const getAllOrdersAdmin = async (req, res) => {
 
     let filter = {};
 
+    // 1. Handle Order ID Search
+    if (orderId) {
+      // Validate if the typed string is a valid 24-char hex MongoDB ID
+      const mongoose = require('mongoose'); // Can be moved to top of file
+      if (mongoose.Types.ObjectId.isValid(orderId)) {
+        filter._id = orderId;
+      } else {
+        // If invalid ID is typed, return empty array immediately (no crash)
+        return res.status(200).json({
+          success: true,
+          message: "No orders found",
+          pagination: {
+            totalOrders: 0,
+            currentPage: Number(page),
+            totalPages: 0,
+            limit: Number(limit)
+          },
+          data: []
+        });
+      }
+    }
+
+    // 2. Apply other filters
     if (orderStatus) filter.orderStatus = orderStatus;
     if (paymentStatus) filter.paymentStatus = paymentStatus;
     if (paymentType) filter.paymentType = paymentType;

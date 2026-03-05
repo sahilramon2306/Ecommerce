@@ -1,98 +1,510 @@
+/* ================= ROOT DESIGN SYSTEM ================= */
+
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  --text-dark: #111827;
+  --text-muted: #6b7280;
+
+  --border: #e5e7eb;
+  --bg-light: #f9fafb;
+  --card-bg: #ffffff;
+}
+
+/* ================= PAGE LAYOUT ================= */
+
 .admin-products {
-  padding: 2rem;
-  max-width: 1300px;
-  margin: auto;
+  padding: 40px;
+  background: var(--bg-light);
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  color: var(--text-dark);
 }
 
 .admin-products h1 {
-  font-size: 2rem;
+  font-size: 28px;
   font-weight: 700;
-  margin-bottom: 2rem;
+  margin-bottom: 30px;
 }
 
-.admin-table-wrapper {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-  overflow-x: auto;
+/* ================= CONTROLS ================= */
+
+.admin-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 18px;
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 25px;
 }
+
+.admin-controls input,
+.admin-controls select {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  transition: all 0.3s ease; /* Enhanced transition for smoothness */
+  background: white;
+}
+
+.admin-controls input:focus,
+.admin-controls select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Make searchbar expand smoothly on focus for better UX */
+.admin-controls input[type="text"] { /* Assuming search is the text input */
+  flex-grow: 1;
+  min-width: 200px;
+  transition: width 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Smoother expansion */
+}
+
+.admin-controls input[type="text"]:focus {
+  width: 300px; /* Expand width on focus for smooth feel */
+}
+
+.admin-controls button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.admin-controls button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* ================= BULK ACTIONS ================= */
+
+.bulk-actions {
+  background: #eef2ff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.bulk-actions button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bulk-actions button:first-child {
+  background: var(--success);
+  color: white;
+}
+
+.bulk-actions button:last-child {
+  background: var(--danger);
+  color: white;
+}
+
+/* ================= TABLE ================= */
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.05);
+}
+
+.admin-table thead {
+  background: #f3f4f6;
 }
 
 .admin-table th {
+  padding: 16px;
   text-align: left;
-  padding: 1rem;
-  font-size: 0.85rem;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: #f8fafc;
-  color: #475569;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
 }
 
 .admin-table td {
-  padding: 1rem;
-  border-top: 1px solid #e2e8f0;
+  padding: 16px;
+  font-size: 14px;
+  border-top: 1px solid var(--border);
 }
 
-.admin-table tr:hover {
+.admin-table tbody tr:hover {
   background: #f9fafb;
 }
 
-.status-badge {
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 0.75rem;
+/* ================= LOW STOCK HIGHLIGHT ================= */
+
+.low-stock {
+  color: red;
   font-weight: 600;
-  text-transform: uppercase;
 }
 
-.status-badge.active {
-  background: #dcfce7;
-  color: #166534;
+/* ================= STATUS BADGES ================= */
+/*
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  min-width: 80px;
+  text-align: center;
 }
 
-.status-badge.inactive {
-  background: #fee2e2;
-  color: #991b1b;
+.badge.active {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #10b981;
 }
 
-.actions {
-  display: flex;
-  gap: 0.5rem;
+.badge.inactive {
+  background-color: #fef2f2;
+  color: #7f1d1d;
+  border: 1px solid #ef4444;
 }
+*/
+/* ================= ACTION BUTTONS ================= */
 
-.status-btn {
-  padding: 6px 12px;
-  border-radius: 8px;
+.admin-table button {
+  padding: 6px 10px;
+  border-radius: 6px;
   border: none;
-  background: #2563eb;
-  color: white;
+  font-size: 12px;
   cursor: pointer;
-  font-size: 0.8rem;
+  margin-right: 5px;
+}
+
+.admin-table button:nth-child(1) {
+  background: #3b82f6;
+  color: white;
+}
+
+.admin-table button:nth-child(2) {
+  background: var(--warning);
+  color: white;
+}
+
+.admin-table button:nth-child(3) {
+  background: var(--primary);
+  color: white;
 }
 
 .delete-btn {
-  padding: 6px 12px;
+  background: var(--danger) !important;
+  color: white;
+}
+
+/* ================= PAGINATION ================= */
+
+.pagination {
+  margin-top: 25px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ================= MODAL ================= */
+
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* Increased z-index to ensure it's above navbar */
+  overflow-y: auto; /* Allow scrolling if modal is taller than viewport */
+  padding: 20px; /* Add padding to prevent content from touching edges */
+}
+
+.admin-form,
+.confirm-modal,
+.stock-modal {
+  background: white;
+  width: 95%;
+  max-width: 600px; /* Increased for enterprise feel */
+  max-height: calc(100vh - 40px); /* Max height to fit within viewport with padding */
+  overflow-y: auto; /* Scroll if content overflows */
+  padding: 35px;
+  border-radius: 18px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+.admin-form h3,
+.confirm-modal h3,
+.stock-modal h3 {
+  margin-bottom: 25px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.admin-form .form-group {
+  margin-bottom: 20px;
+}
+
+.admin-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.admin-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.admin-form .file-input {
+  border: none;
+  padding: 0;
+}
+
+.admin-form .error {
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.stock-modal input {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+}
+
+.stock-modal input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.modal-actions button {
+  padding: 12px 24px;
   border-radius: 8px;
   border: none;
-  background: #dc2626;
-  color: white;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 0.8rem;
+  transition: all 0.2s ease;
 }
 
-.empty-state {
-  padding: 3rem;
-  text-align: center;
-  color: #64748b;
+.modal-actions button[type="submit"],
+.modal-actions button.confirm {
+  background: var(--primary);
+  color: white;
 }
+
+.modal-actions button[type="submit"]:hover,
+.modal-actions button.confirm:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.modal-actions button[type="button"],
+.modal-actions button.cancel {
+  background: #e5e7eb;
+  color: var(--text-dark);
+}
+
+.modal-actions button[type="button"]:hover,
+.modal-actions button.cancel:hover {
+  background: #d1d5db;
+}
+
+.modal-actions button.danger {
+  background: var(--danger);
+  color: white;
+}
+
+.modal-actions button.danger:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.admin-form .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.admin-form .close-btn:hover {
+  color: var(--text-dark);
+}
+
+/* ================= IMAGE PREVIEW ================= */
+
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.image-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ================= LOADING ================= */
 
 .admin-loading {
-  padding: 3rem;
-  text-align: center;
-  font-size: 1.2rem;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+  .admin-products {
+    padding: 20px;
+  }
+
+  .admin-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-controls input,
+  .admin-controls select,
+  .admin-controls button {
+    width: 100%;
+  }
+
+  /* Adjust searchbar expansion for mobile */
+  .admin-controls input[type="text"]:focus {
+    width: 100%; /* No expansion on mobile to avoid overflow */
+  }
+
+  /* Hide only price column safely */
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3) {
+    display: none;
+  }
+
+  .admin-form,
+  .confirm-modal,
+  .stock-modal {
+    padding: 25px;
+    max-width: 100%;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+
+  .admin-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }

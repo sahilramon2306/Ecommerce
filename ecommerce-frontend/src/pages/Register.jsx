@@ -55,7 +55,7 @@ const Register = () => {
       {/* Left Brand Panel */}
       <div className="register-brand">
         <div className="brand-content">
-          <h1>S. ECOMMERCE</h1>
+          <h1>SahimonCart</h1>
           <p>Experience luxury shopping like never before.</p>
         </div>
       </div>

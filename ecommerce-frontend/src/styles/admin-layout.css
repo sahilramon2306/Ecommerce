@@ -26,7 +26,7 @@
 /* ================= DARK SIDEBAR ================= */
 
 .admin-sidebar {
-  width: 280px;
+  width: 180px;
   background: var(--dark);
   color: var(--text);
   border-right: 1px solid var(--dark-2);
@@ -37,7 +37,7 @@
 }
 
 .admin-logo {
-  font-size: 1.75rem;
+  font-size: 1.40rem;
   font-weight: 800;
   padding: 2rem 1.5rem 1.5rem;
   letter-spacing: -1px;

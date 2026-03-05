@@ -57,7 +57,7 @@ const Navbar = () => {
     <nav className="navbar">
       <NavLink to="/" className="logo" onClick={closeMenu}>
         <img src="/logo.png" alt="Logo" className="logo-img" />
-        <span>S. ECOMMERCE</span>
+        <span>SahimonCart</span>
       </NavLink>
 
       <button
@@ -81,15 +81,16 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <NavLink to="/profile" onClick={closeMenu}>👤 Profile</NavLink>
-
+          
             {user.role === "admin" && (
               <NavLink to="/admin/dashboard" onClick={closeMenu}>
                 ⚙️ Admin
               </NavLink>
             )}
 
-            <span className="username">Hello, {user.name}</span>
+            <NavLink to="/profile" onClick={closeMenu}>
+              <span className="username">Hello, {user.name}</span>
+            </NavLink>
 
             <button className="logout-btn" onClick={handleLogout}>
               Logout

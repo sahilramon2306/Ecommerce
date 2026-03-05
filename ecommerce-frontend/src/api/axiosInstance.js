@@ -1,3 +1,4 @@
+// axiosInstance.js - Updated with Skip Auth Option for Public Endpoints
 import axios from "axios";
 
 const axiosInstance = axios.create({
@@ -11,10 +12,12 @@ axiosInstance.interceptors.request.use(
     // 1. Dispatch loading event
     window.dispatchEvent(new CustomEvent('loading', { detail: true }));
     
-    // 2. Attach the token from localStorage
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // 2. Skip auth if explicitly set (for public endpoints like forgot-password)
+    if (!config.skipAuth) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     
     return config;
@@ -33,6 +36,13 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     window.dispatchEvent(new CustomEvent('loading', { detail: false }));
+    
+    // Handle 401 globally (e.g., redirect to login for auth errors)
+    if (error.response?.status === 401 && !error.config.skipAuth) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    
     return Promise.reject(error);
   }
 );

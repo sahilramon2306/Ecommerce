@@ -188,6 +188,20 @@
   transform: translateY(-2px);
 }
 
+.reviews-section {
+  margin-top: 4rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.reviews-section h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
 /* Responsive */
 @media (max-width: 968px) {
   .product-detail-grid {
