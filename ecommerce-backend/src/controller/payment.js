@@ -8,8 +8,6 @@ const sendInvoiceEmail = require("../utils/sendInvoiceEmail");
 
 
 
-
-
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
@@ -186,14 +184,14 @@ const verifyRazorpayPayment = async (req, res) => {
           subject: "Your Invoice - Sahil's Ecommerce",
           text: `Hello ${order.address.fullName},
 
-Thank you for shopping with Sahil's Ecommerce.
+Thank you for shopping with SahimonCart.
 
 Your invoice is attached with this email.
 
 Order ID: ${order._id}
 
 Regards,
-Team Sahil's Ecommerce`,
+Team SahimonCart`,
           attachmentPath: invoice.filePath
         });
       } else {
@@ -258,6 +256,7 @@ const razorpayWebhook = async (req, res) => {
 // REFUND PAYMENT (ADMIN)
 const refundRazorpayPayment = async (req, res) => {
   try {
+
     const { orderId } = req.params;
 
     const order = await orderModel
@@ -278,24 +277,17 @@ const refundRazorpayPayment = async (req, res) => {
       });
     }
 
-    if (order.paymentStatus !== "captured") {
+    if (!["returned", "cancelled"].includes(order.orderStatus)) {
       return res.status(400).json({
         success: false,
-        message: "Payment not captured yet"
+        message: "Order not eligible for refund"
       });
     }
 
     if (order.refundStatus === "processed") {
       return res.status(400).json({
         success: false,
-        message: "Refund already processed for this order"
-      });
-    }
-
-    if (!["returned", "cancelled"].includes(order.orderStatus)) {
-      return res.status(400).json({
-        success: false,
-        message: "Order not eligible for refund"
+        message: "Refund already processed"
       });
     }
 
@@ -306,34 +298,36 @@ const refundRazorpayPayment = async (req, res) => {
       });
     }
 
-    const amount = Number(order.totalAmount);
+    /* Calculate refund amount from order */
 
-    if (!amount || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid refund amount"
-      });
-    }
+    const refundAmount = Math.round(order.totalAmount * 100);
+
+    console.log("Refund Amount (paise):", refundAmount);
+
+    /* Create refund */
 
     const refund = await razorpay.payments.refund(
       order.razorpayPaymentId,
       {
-        amount: Math.round(amount * 100) 
+        amount: refundAmount
       }
     );
+
+    /* Update order */
 
     order.paymentStatus = "refunded";
     order.refundStatus = "processed";
     order.razorpayRefundId = refund.id;
     order.refundedAt = new Date();
 
-    await order.save(); 
+    await order.save();
+
+    /* Restore stock */
 
     for (const item of order.items) {
       await productModel.findByIdAndUpdate(
         item.productId._id,
-        { $inc: { stock: item.quantity } }, 
-        { new: true }
+        { $inc: { stock: item.quantity } }
       );
     }
 
@@ -344,15 +338,19 @@ const refundRazorpayPayment = async (req, res) => {
     });
 
   } catch (error) {
+
     console.error("Refund error:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.error?.description || error.message || "Refund failed"
+      message:
+        error?.error?.description ||
+        error?.message ||
+        "Refund failed"
     });
+
   }
 };
-
 
 //--------------------------------------------------------------------------------------------------------
 // Refund Single Item

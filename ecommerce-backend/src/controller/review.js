@@ -287,6 +287,33 @@ const moderateReview = async (req, res) => {
   }
 };
 
+//----------------------------------------------------------------------------------------------------------
+const getAllReviewsAdmin = async (req, res) => {
+  try {
+
+    const reviews = await reviewmodel
+      .find({})
+      .populate("userId", "name email")
+      .populate("productId", "name")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: reviews
+    });
+
+  } catch (error) {
+
+    console.error("getAllReviewsAdmin error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+};
+
 
 
 
@@ -302,5 +329,6 @@ module.exports = {
   deleteReview,
   getProductReviews,
   getRatingSummary,
-  moderateReview
+  moderateReview,
+  getAllReviewsAdmin
 };

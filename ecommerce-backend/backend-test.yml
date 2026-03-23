@@ -1,0 +1,49 @@
+config:
+  target: "http://localhost:5000" 
+  
+  phases:
+    - duration: 20
+      arrivalRate: 10
+      name: "Warm up phase"
+      
+    - duration: 30
+      arrivalRate: 50
+      name: "High load phase"
+
+scenarios:
+  - name: "User browsing products"
+    flow:
+
+      - post:
+          url: "/registration" # ⚠️ Update this if your route has a prefix, like /api/register
+          json:
+            name: "Salik Khan LoadTest"
+            # Generates a random string so every email is unique!
+            email: "loadtest_{{ $randomString() }}@gmail.com"
+            # Generates a random 10-digit phone number starting with 95!
+            phone: "95{{ $randomNumber(10000000, 99999999) }}"
+            password: "abc"
+            addresses:
+              - houseNo: "73/3"
+                postOffice: "Berhampore"
+                policeStation: "Berhampore"
+                pincode: "742101"
+                state: "West Bengal"
+                district: "Murshidabad"
+                city: "Berhampore"
+                addressLine: "Exhibition Bagan Road"
+                landmark: "Near Rose Mery Nursery School"
+                isDefault: true
+
+      # Step 1: User hits the main products page
+      - get:
+          url: "/list-All-Products-Public" 
+          
+      - think: 2 
+      
+      # Step 3: User clicks on a specific product (Colon removed!)
+      - get:
+          url: "/get-Single-Product-Details/6999c5ae1fbbf6d50ae92373"
+
+
+

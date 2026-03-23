@@ -2,13 +2,11 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads/products folder exists
 const uploadPath = path.join(__dirname, "..", "uploads", "products");
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// Storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadPath);
@@ -20,7 +18,6 @@ const storage = multer.diskStorage({
   },
 });
 
-// ✅ UPDATED FILE FILTER (THIS IS THE FIX)
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     "image/jpeg",
@@ -41,7 +38,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Max file size 5MB
 const upload = multer({
   storage,
   fileFilter,

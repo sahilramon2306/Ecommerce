@@ -1,4 +1,5 @@
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalListener from "./components/GlobalListener";
 import { Toaster } from 'react-hot-toast';
@@ -48,7 +49,9 @@ function App() {
           },
         }}
       />
+      <Footer />
     </>
+
   );
 }
 

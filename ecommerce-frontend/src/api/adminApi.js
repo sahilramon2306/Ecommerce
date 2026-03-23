@@ -124,19 +124,44 @@ export const updatePaymentStatusAdmin = (
 
 // Download invoice (returns file)
 export const getOrderInvoiceAdmin = (orderId) => {
-  return axiosInstance.get(
-    `/get-Order-Invoice-Admin/${orderId}`,
-    {
-      responseType: "blob", // Important for PDF
-    }
-  );
+  return axiosInstance.get(`/get-order-invoice/${orderId}`, {
+    responseType: "blob"
+  });
 };
 
 
+// Refund Razorpay Payment (Admin)
 export const refundRazorpayPayment = (orderId) => {
+  return axiosInstance.post(`/refund-Razorpay-Payment/${orderId}`);
+};
+
+//============================================================================================
+//CATEGORY ADMIN 
+export const createCategoryAdmin = (data) => {
+  return axiosInstance.post("/create-Category", data);
+};
+
+export const updateCategoryAdmin = (id, data) => {
+  return axiosInstance.put(`/update-Category/${id}`, data);
+};
+
+export const deleteCategoryAdmin = (id, type = "soft") => {
+  return axiosInstance.delete(`/delete-Category/${id}?type=${type}`);
+};
+
+export const uploadCategoryImageAdmin = (id, formData) => {
   return axiosInstance.post(
-    `/refund-Razorpay-Payment/${orderId}`
+    `/upload-Category-Image/${id}`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
   );
 };
 
+export const changeCategoryStatusAdmin = (id, status) => {
+  return axiosInstance.put(`/change-Category-Status/${id}`, { status });
+};
+
+export const getAllCategoriesAdmin = (params) => {
+  return axiosInstance.get("/get-All-Categories", { params });
+};
 

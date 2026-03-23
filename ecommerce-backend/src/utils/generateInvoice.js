@@ -166,7 +166,7 @@ const generateInvoicePDF = async (order) => {
       y += 100;
       doc.fontSize(10);
       doc.text("Paid via Razorpay", startX, y);
-      doc.text("Thank you for shopping with Sahil's Ecommerce.", startX, y + 14);
+      doc.text("Thank you for shopping with SahimonCart.", startX, y + 14);
       doc.text("This is a system-generated invoice.", startX, y + 28);
 
       doc.end();

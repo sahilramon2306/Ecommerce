@@ -1,0 +1,101 @@
+.story-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+  background: #f8fafc;
+}
+
+.story-hero {
+  text-align: center;
+  padding: 5rem 1rem 4rem;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  border-radius: 24px;
+  margin-bottom: 5rem;
+}
+
+.story-hero h1 {
+  font-size: clamp(2.8rem, 6vw, 4rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.story-hero p {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+.story-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 4rem;
+  position: relative;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.year {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #2563eb;
+  min-width: 90px;
+}
+
+.content h3 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.content p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #475569;
+}
+
+.founder-note {
+  margin-top: 5rem;
+  padding: 3rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+  text-align: center;
+}
+
+.founder-note h2 {
+  margin-bottom: 1.5rem;
+  color: #0f172a;
+}
+
+.founder-note p {
+  font-size: 1.15rem;
+  line-height: 1.85;
+  color: #475569;
+  max-width: 700px;
+  margin: 0 auto 2rem;
+}
+
+.founder-name {
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .timeline-item {
+    gap: 1.5rem;
+  }
+  
+  .year {
+    font-size: 1.8rem;
+    min-width: 70px;
+  }
+}

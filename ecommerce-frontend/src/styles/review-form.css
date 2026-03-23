@@ -1,0 +1,110 @@
+/* styles/review-form.css */
+
+.review-form {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  margin-top: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.review-form h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Rating Select */
+.rating-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rating-select label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rating-select select {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-color);
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.rating-select select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.rating-select option {
+  padding: 0.5rem;
+  background: white;
+}
+
+/* Textarea */
+.review-form textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-color);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  color: var(--text-primary);
+  resize: vertical;
+  transition: var(--transition);
+  margin-bottom: 1rem;
+}
+
+.review-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.review-form textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Submit Button */
+.review-form button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.review-form button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.review-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--secondary-color);
+}
+
+@media (max-width: 480px) {
+  .review-form {
+    padding: 1.5rem;
+  }
+}

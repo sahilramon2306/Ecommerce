@@ -141,20 +141,36 @@ const OrdersAdmin = () => {
     }
   };
 
-  const downloadInvoice = async (id) => {
-    try {
-      const res = await getOrderInvoiceAdmin(id);
-      const url = URL.createObjectURL(new Blob([res.data.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice_${id}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Invoice error:", err);
-      showToast("Failed to download invoice", "error");
-    }
-  };
+ const downloadInvoice = async (id) => {
+  try {
+
+    const res = await getOrderInvoiceAdmin(id);
+
+    const blob = new Blob([res.data], { type: "application/pdf" });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `invoice_${id}.pdf`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+
+    console.error("Invoice error:", err);
+
+    showToast("Failed to download invoice", "error");
+
+  }
+};
 
   if (loading && orders.length === 0) return <div className="admin-loading">Loading Orders...</div>;
 

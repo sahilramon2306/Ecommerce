@@ -314,26 +314,77 @@ const changeCategoryStatus = async (req, res) => {
 };
 
 //--------------------------------------------------------------------------------------------------------------
-// Get All Categories (Admin)
+// Get All Categories (Admin) 
 const getAllCategories = async (req, res) => {
   try {
+
+    /* QUERY PARAMS */
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const sortField = req.query.sort || "createdAt";
+    const sortOrder = req.query.order === "asc" ? 1 : -1;
+    const status = req.query.status;
+    const parent = req.query.parent;
+
+    const skip = (page - 1) * limit;
+
+    /* FILTER OBJECT */
+
+    const filter = {};
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { slug: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    if (status !== undefined) {
+      filter.status = status === "true";
+    }
+
+    if (parent) {
+      filter.parent = parent;
+    }
+
+    /* FETCH DATA */
+
     const categories = await categoryModel
-      .find() // fetch all (active + inactive)
+      .find(filter)
       .populate("parent", "name slug")
-      .sort({ createdAt: -1 });
+      .sort({ [sortField]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+
+    /* TOTAL COUNT */
+
+    const totalCategories = await categoryModel.countDocuments(filter);
 
     return res.status(200).json({
       success: true,
       message: "Categories fetched successfully",
-      data: categories
+      data: categories,
+
+      pagination: {
+        total: totalCategories,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCategories / limit)
+      }
+
     });
 
   } catch (error) {
+
     console.error("❌ getAllCategories error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
     });
+
   }
 };
 

@@ -10,6 +10,7 @@ const setRouter = (app) => {
   app.get("/get-Product-Reviews/:productId", reviewController.getProductReviews);
   app.get("/get-Rating-Summary/:productId", reviewController.getRatingSummary);
   app.put("/moderate-Review/:reviewId", authMiddleware, adminMiddleware, reviewController.moderateReview);
+  app.get("/get-All-Reviews-Admin", authMiddleware, adminMiddleware, reviewController.getAllReviewsAdmin);
 };
 
 

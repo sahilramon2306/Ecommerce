@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const APP_NAME = "Sahil's E-commerce application";
+const APP_NAME = "SahimonCart";
 
 const sendEmail = async ({ to, subject, text }) => {
   const transporter = nodemailer.createTransport({

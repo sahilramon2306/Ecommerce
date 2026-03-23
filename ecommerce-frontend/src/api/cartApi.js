@@ -1,7 +1,11 @@
 import axiosInstance from "./axiosInstance";
 
+
 export const addToCart = (productId, quantity = 1) => {
-  return axiosInstance.post("/add-To-Cart", { productId, quantity });
+  return axiosInstance.post("/add-To-Cart", {
+    productId,
+    quantity
+  });
 };
 
 export const getUserCart = () =>

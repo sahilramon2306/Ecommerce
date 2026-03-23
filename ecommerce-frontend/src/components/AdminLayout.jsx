@@ -29,10 +29,6 @@ const AdminLayout = () => {
           <NavLink to="reviews" className="admin-link">
             Reviews
           </NavLink>
-
-          <NavLink to="analytics" className="admin-link">
-            Analytics
-          </NavLink>
         </nav>
       </aside>
 

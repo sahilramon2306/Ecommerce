@@ -1,18 +1,49 @@
+/* styles/admin-dashboard.css */
+
+/* Base Styles */
 .admin-dashboard {
-  padding: 32px;
+  padding: 40px 20px;
   background: linear-gradient(135deg, #f8fafc, #eef2f7);
   min-height: 100vh;
-  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
 }
 
-.admin-dashboard h1 {
-  font-size: 30px;
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 32px;
   color: #1e293b;
-  letter-spacing: -0.5px;
 }
 
+.range-filter {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.range-filter button {
+  border: none;
+  background: #e2e8f0;
+  padding: 8px 14px;
+  margin-left: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.range-filter button.active {
+  background: #4f46e5;
+  color: white;
+}
 
 .dashboard-cards {
   display: grid;
@@ -22,127 +53,132 @@
 }
 
 .dashboard-card {
-  background: linear-gradient(135deg, #ffffff, #f9fafb);
+  background: white;
   border-radius: 14px;
   padding: 22px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.dashboard-card::after {
-  content: "";
-  position: absolute;
-  right: -30px;
-  top: -30px;
-  width: 100px;
-  height: 100px;
-  background: rgba(99, 102, 241, 0.05);
-  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
 }
 
 .dashboard-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 .dashboard-card-title {
   font-size: 14px;
-  font-weight: 500;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .dashboard-card-value {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  margin-top: 10px;
-  color: #0f172a;
-}
-
-
-.chart-section {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 40px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-  transition: 0.2s ease;
-}
-
-.chart-section:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
-}
-
-.chart-section h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
+  margin-top: 8px;
   color: #1e293b;
 }
 
+#Revenue-Comparison{
+  background-color: rgb(232, 232, 251);
+}
 
-.table-section {
-  background: #ffffff;
+.sparkline {
+  margin-top: 10px;
+  height: 60px;
+}
+
+.revenue-growth {
+  margin-top: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.revenue-growth.positive {
+  color: #16a34a;
+}
+
+.revenue-growth.negative {
+  color: #dc2626;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.chart-section {
+  background: white;
   border-radius: 16px;
   padding: 24px;
-  margin-bottom: 40px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+}
+
+.chart-section h2 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.table-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
 }
 
 .table-section h2 {
+  margin-bottom: 20px;
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 20px;
   color: #1e293b;
 }
 
 .table-wrapper {
   overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
-.table-section table {
+table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
+  min-width: 500px; /* Ensure horizontal scroll on small screens */
 }
 
-.table-section thead {
+th {
   background: #f1f5f9;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
-.table-section th,
-.table-section td {
-  padding: 14px 12px;
-  text-align: left;
+td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
   font-size: 14px;
 }
 
-.table-section th {
-  font-weight: 600;
-  color: #334155;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.table-section tbody tr {
-  transition: all 0.15s ease;
-}
-
-.table-section tbody tr:hover {
-  background-color: #f8fafc;
-}
-
-.table-section tbody td {
-  border-bottom: 1px solid #e2e8f0;
-  color: #475569;
-}
-
-/* Low Stock Highlight */
 .low-stock {
   color: #dc2626;
   font-weight: 700;
 }
-
 
 .dashboard-loading,
 .dashboard-error {
@@ -150,49 +186,18 @@
   padding: 80px 20px;
   font-size: 20px;
   font-weight: 600;
+  color: #64748b;
 }
 
-.dashboard-loading {
-  color: #2563eb;
-}
-
-.dashboard-error {
-  color: #dc2626;
-}
-
-
+/* Responsive Design - Tablet and Below */
 @media (max-width: 1024px) {
   .admin-dashboard {
-    padding: 24px;
+    padding: 30px 15px;
   }
 
   .dashboard-cards {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .admin-dashboard {
-    padding: 16px;
-  }
-
-  .admin-dashboard h1 {
-    font-size: 24px;
-  }
-
-  .dashboard-card-value {
-    font-size: 22px;
-  }
-
-  .chart-section,
-  .table-section {
-    padding: 18px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
   }
 
   .dashboard-card {
@@ -200,12 +205,178 @@
   }
 
   .dashboard-card-value {
+    font-size: 24px;
+  }
+
+  .chart-grid,
+  .table-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .chart-section,
+  .table-section {
+    padding: 20px;
+  }
+}
+
+/* Mobile - Large */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 20px 10px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .range-filter {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .range-filter button {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .dashboard-card {
+    padding: 16px;
+  }
+
+  .dashboard-card-title {
+    font-size: 13px;
+  }
+
+  .dashboard-card-value {
+    font-size: 22px;
+  }
+
+  .sparkline {
+    height: 50px;
+  }
+
+  .chart-section,
+  .table-section {
+    padding: 16px;
+  }
+
+  .chart-section h2,
+  .table-section h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  th,
+  td {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+
+  table {
+    min-width: 400px;
+  }
+
+  .table-wrapper {
+    margin: 0 -10px; /* Full width on mobile */
+  }
+
+  .dashboard-loading,
+  .dashboard-error {
+    padding: 60px 10px;
+    font-size: 18px;
+  }
+}
+
+/* Mobile - Small */
+@media (max-width: 480px) {
+  .admin-dashboard {
+    padding: 15px 5px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .range-filter button {
+    padding: 5px 10px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-card {
+    padding: 14px;
+  }
+
+  .dashboard-card-value {
     font-size: 20px;
   }
 
-  .table-section th,
-  .table-section td {
+  .sparkline {
+    height: 40px;
+  }
+
+  .chart-section,
+  .table-section {
+    padding: 12px;
+  }
+
+  .chart-section h2,
+  .table-section h2 {
+    font-size: 15px;
+  }
+
+  th,
+  td {
+    padding: 6px 2px;
+    font-size: 12px;
+  }
+
+  table {
+    min-width: 300px;
+  }
+
+  .revenue-growth {
     font-size: 13px;
-    padding: 10px;
+  }
+
+  .dashboard-loading,
+  .dashboard-error {
+    padding: 40px 5px;
+    font-size: 16px;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .admin-dashboard {
+    padding: 10px 5px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-grid,
+  .table-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
