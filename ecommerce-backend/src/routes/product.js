@@ -17,6 +17,7 @@ const setRouter = (app) => {
     app.put("/update-Product-Stock/:productId", authMiddleware, adminMiddleware, productController.updateProductStock);
     app.put("/update-Product-Status/:productId", authMiddleware, adminMiddleware, productController.updateProductStatus);
     app.post("/rate-Product/:productId", authMiddleware, productController.rateProduct);
+    app.get("/get-products-by-category/:categoryId", productController.getProductsByCategoryPublic);
 }
 
 

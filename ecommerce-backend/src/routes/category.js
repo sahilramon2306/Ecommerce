@@ -14,6 +14,7 @@ const setRouter = (app) => {
   app.get("/get-All-Active-Categories-Public", categoryController.getAllActiveCategoriesPublic);
   app.get("/get-Single-Category-Public/:categoryId", categoryController.getSingleCategoryPublic);
   app.get("/get-Subcategories-Public/:categoryId", categoryController.getSubcategoriesPublic);
+  
 };
 
 

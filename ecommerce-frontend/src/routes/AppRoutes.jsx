@@ -10,7 +10,7 @@ import OAuthSuccess from "../pages/OAuthSuccess";
 
 /* ================= CATEGORIES ================= */
 import PublicCategories from "../pages/PublicCategories";
-import Subcategories from "../pages/Subcategories";
+
 
 /* ================= USER PAGES ================= */
 import Cart from "../pages/Cart";
@@ -27,6 +27,11 @@ import Blog from "../pages/Blog";
 import ContactUs from "../pages/ContactUs";
 import Accessibility from "../pages/Accessibility";
 import TermsOfService from "../pages/TermsOfService";
+import HelpCenter from "../pages/HelpCenter";
+import ShippingInfo from "../pages/ShippingInfo";
+import Returns from "../pages/Returns";
+import TrackOrder from "../pages/TrackOrder";
+import FAQ from "../pages/FAQ";
 
 /* ================= PASSWORD RESET ================= */
 import ForgotPassword from "../pages/ForgotPassword";
@@ -41,6 +46,7 @@ import Products from "../pages/admin/Products";
 import OrdersAdmin from "../pages/admin/OrdersAdmin";
 import Reviews from "../pages/admin/Reviews";
 import Categories from "../pages/admin/Categories";
+import AdminUsers from "../pages/admin/AdminUsers";
 
 /* ================= PROTECTION ================= */
 import ProtectedRoute from "./ProtectedRoute";
@@ -63,10 +69,17 @@ const AppRoutes = () => {
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/accessibility" element={<Accessibility />} />
       <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/help-center" element={<HelpCenter />} />
+      <Route path="/shipping-info" element={<ShippingInfo />} />
+      <Route path="/returns" element={<Returns />} />
+      <Route path="/track-order" element={<TrackOrder />} />
+      <Route path="/faq" element={<FAQ />} />
 
       {/* ================= CATEGORY ROUTES ================= */}
       <Route path="/categories" element={<PublicCategories />} />
-      <Route path="/category/:categoryId" element={<Subcategories />} />
+      <Route path="/categories/:categoryId" element={<PublicCategories />} />
+      <Route path="/products/:childId" element={<SearchResults />} />
+     
 
       {/* ================= AUTH ================= */}
       <Route path="/login" element={<Login />} />
@@ -135,6 +148,7 @@ const AppRoutes = () => {
         <Route path="orders" element={<OrdersAdmin />} />
         <Route path="reviews" element={<Reviews />} />
         <Route path="categories" element={<Categories />} />
+        <Route path="users" element={<AdminUsers />} />
       </Route>
 
       {/* ================= 404 PAGE ================= */}

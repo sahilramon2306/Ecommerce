@@ -15,6 +15,7 @@ const setRouter = (app) => {
     app.put("/update-Order-Status-Admin/:orderId", authMiddleware, adminMiddleware, orderController.updateOrderStatusAdmin);
     app.put("/update-Payment-Status-Admin/:orderId", authMiddleware, adminMiddleware, orderController.updatePaymentStatusAdmin);
     app.get("/get-Order-Invoice-Admin/:orderId", authMiddleware, adminMiddleware, orderController.getOrderInvoiceAdmin);
+    app.get("/public-track-Order-Status/:orderId", orderController.publicTrackOrderStatus);
 };
 
 module.exports = { setRouter };

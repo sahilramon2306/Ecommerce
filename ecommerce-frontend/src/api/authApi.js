@@ -15,7 +15,7 @@ export const logoutUser = () => {
 
 // Password Reset Functions (Public - No Auth Required)
 export const forgotPassword = (data) => {
-  return axiosInstance.post("/forgot-Password", data);
+  return axiosInstance.post("/forgot-password", data);
 };
 
 export const verifyResetOTP = (data) => {

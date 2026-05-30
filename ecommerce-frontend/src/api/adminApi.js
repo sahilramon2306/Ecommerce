@@ -165,3 +165,50 @@ export const getAllCategoriesAdmin = (params) => {
   return axiosInstance.get("/get-All-Categories", { params });
 };
 
+
+
+
+// =================================================================================================
+// ADMIN USER MANAGEMENT APIs
+// Get all users (pagination + search)
+export const getAllUsersAdmin = (params) => {
+  return axiosInstance.get("/get-All-Users-Admin", {
+    params,
+  });
+};
+
+// Get single user details
+export const getSingleUserAdmin = (userId) => {
+  return axiosInstance.get(
+    `/get-Single-User-Admin/${userId}`
+  );
+};
+
+// Block / Unblock user
+export const changeUserStatusAdmin = (
+  userId,
+  isBlocked
+) => {
+  return axiosInstance.put(
+    `/change-User-Status-Admin/${userId}`,
+    { isBlocked }
+  );
+};
+
+// Change user role
+export const changeUserRoleAdmin = (
+  userId,
+  role
+) => {
+  return axiosInstance.put(
+    `/change-User-Role-Admin/${userId}`,
+    { role }
+  );
+};
+
+// Delete user
+export const deleteUserAdmin = (userId) => {
+  return axiosInstance.delete(
+    `/delete-User-Admin/${userId}`
+  );
+};

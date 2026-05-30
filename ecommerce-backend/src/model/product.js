@@ -33,12 +33,23 @@ const productSchema = new mongoose.Schema(
       }
     },
 
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-      index: true
+   category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category_db",
+      required: true
     },
+
+  subCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category_db",
+    required: true
+  },
+
+  childCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category_db",
+    required: true
+  },
 
     brand: {
       type: String,

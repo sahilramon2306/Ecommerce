@@ -86,13 +86,22 @@ fs.readdirSync(routesPath).forEach((file) => {
 });
 
 /* ------------------ Health Check ------------------ */
+const PORT = Number(process.env.PORT) || 5000;
+
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Backend running",
+    port: PORT
   });
 });
 
+app.get("/test", (req, res) => {
+  res.json({
+    port: PORT,
+    pid: process.pid
+  });
+});
 /* ------------------ 404 Handler ------------------ */
 app.use((req, res) => {
   res.status(404).json({
@@ -105,7 +114,6 @@ app.use((req, res) => {
 database.startDB();
 
 /* ------------------ Start Server ------------------ */
-const PORT = 5000;
 app.listen(PORT, () => {
-  console.log("🚀 Server running on port", PORT);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

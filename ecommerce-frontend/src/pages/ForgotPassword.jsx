@@ -21,7 +21,7 @@ const ForgotPassword = () => {
     try {
 
       const res = await axiosInstance.post(
-        "/forgot-Password",
+        "/forgot-password",
         { email },
         { skipAuth: true }
       );

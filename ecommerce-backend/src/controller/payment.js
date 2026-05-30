@@ -182,7 +182,7 @@ const verifyRazorpayPayment = async (req, res) => {
         await sendInvoiceEmail({
           to: user.email,
           subject: "Your Invoice - Sahil's Ecommerce",
-          text: `Hello ${order.address.fullName},
+          text: `Dear Customer,
 
 Thank you for shopping with SahimonCart.
 

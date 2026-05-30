@@ -1,4 +1,5 @@
 const userModel = require('../model/user.js');
+const productModel = require("../model/product.js");
 const { getToken } = require("../utils/getToken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
@@ -139,6 +140,14 @@ const login = async (req, res) => {
       });
     }
 
+    /* ================= BLOCK CHECK ================= */
+    if (user.isBlocked === true) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been blocked by admin.",
+      });
+    }
+
     const isMatch = await passwordLib.passwordVerify(
       password,
       user.password
@@ -151,29 +160,29 @@ const login = async (req, res) => {
       });
     }
 
-    /* ------------------ JWT TOKEN ------------------ */
+    /* ---------------- JWT TOKEN ---------------- */
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" } // ⏱ token expiry
+      { expiresIn: "15m" }
     );
 
-    /* ------------------ SET COOKIE (CRITICAL) ------------------ */
+    /* ---------------- COOKIE ---------------- */
     res.cookie("token", token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 15 * 60 * 1000,
-  });
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 15 * 60 * 1000,
+    });
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token: token,
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -181,16 +190,18 @@ const login = async (req, res) => {
         phone: user.phone,
         role: user.role,
       },
-  });
+    });
 
   } catch (error) {
     console.error("Login Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
   }
 };
+
 //---------------------------------------------------------------------------------------
 // User Logout
 const logout = async (req, res) => {
@@ -1003,6 +1014,213 @@ const refreshToken = async (req, res) => {
   }
 };
 
+// =======================================================
+// Admin - Get All Users
+const getAllUsersAdmin = async (req, res) => {
+  try {
+    let {
+      page = 1,
+      limit = 10,
+      search = ""
+    } = req.query;
+
+    page = Number(page);
+    limit = Number(limit);
+
+    const query = search
+      ? {
+          $or: [
+            {
+              name: {
+                $regex: search,
+                $options: "i"
+              }
+            },
+            {
+              email: {
+                $regex: search,
+                $options: "i"
+              }
+            },
+            {
+              phone: {
+                $regex: search,
+                $options: "i"
+              }
+            },
+            {
+              role: {
+                $regex: search,
+                $options: "i"
+              }
+            }
+          ]
+        }
+      : {};
+
+    const total =
+      await userModel.countDocuments(query);
+
+    const users = await userModel
+      .find(query)
+      .select("-password -__v")
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      data: users
+    });
+
+  } catch (error) {
+    console.error(
+      "getAllUsersAdmin Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+// =======================================================
+// Admin - Get Single User
+const getSingleUserAdmin = async (req, res) => {
+  try {
+    const user = await userModel
+      .findById(req.params.userId)
+      .select("-password -__v");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: user
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+// =======================================================
+// Admin - Block / Unblock User
+const changeUserStatusAdmin = async (req, res) => {
+  try {
+    const { isBlocked } = req.body;
+
+    const user = await userModel.findByIdAndUpdate(
+      req.params.userId,
+      { isBlocked },
+      { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "User status updated",
+      data: user
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+// =======================================================
+// Admin - Change Role
+const changeUserRoleAdmin = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    const user = await userModel.findByIdAndUpdate(
+      req.params.userId,
+      { role },
+      { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "User role updated",
+      data: user
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+// =======================================================
+// Admin - Delete User
+const deleteUserAdmin = async (req, res) => {
+  try {
+    await userModel.findByIdAndDelete(req.params.userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+// =======================================================
+const getPublicSiteStats = async (req, res) => {
+  try {
+    const totalUsers =
+      await userModel.countDocuments();
+
+    const totalAdmins =
+      await userModel.countDocuments({
+        role: "admin"
+      });
+
+    const totalCustomers =
+      totalUsers - totalAdmins;
+
+    const totalProducts =
+      await productModel.countDocuments();
+
+    return res.status(200).json({
+      success: true,
+      customers: totalCustomers,
+      products: totalProducts
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
 
 
 
@@ -1026,5 +1244,11 @@ module.exports = {
   verifyResetOTP: verifyResetOTP,
   resetPassword: resetPassword,
   changePassword: changePassword,
-  refreshToken: refreshToken
+  refreshToken: refreshToken,
+  getAllUsersAdmin: getAllUsersAdmin,
+  getSingleUserAdmin: getSingleUserAdmin,
+  changeUserStatusAdmin: changeUserStatusAdmin,
+  changeUserRoleAdmin: changeUserRoleAdmin,
+  deleteUserAdmin: deleteUserAdmin,
+  getPublicSiteStats: getPublicSiteStats
 };

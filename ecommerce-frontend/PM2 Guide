@@ -1,0 +1,137 @@
+🚀 PM2 ONLY — FULL PRACTICAL GUIDE
+
+Your flow now:
+
+Frontend (5173)
+   ↓
+Backend PM2 (5000)
+   ↓
+8 Node Workers
+🔥 1. Start Server
+
+Go to backend folder:
+
+cd D:\Node_js\Ecommerce\ecommerce-backend
+
+Run:
+
+pm2 start app.js -i max --name sahimoncart
+🔍 Meaning
+app.js = your server file
+-i max = use all CPU cores
+--name sahimoncart = custom process name
+🔥 2. See Running Servers
+pm2 list
+
+You’ll see:
+
+id | name         | mode    | status
+0  | sahimoncart  | cluster | online
+1  | sahimoncart  | cluster | online
+...
+🔥 3. Stop Server
+pm2 stop sahimoncart
+🔥 4. Restart Server
+pm2 restart sahimoncart
+🔥 5. Delete Server
+
+(remove from PM2 list)
+
+pm2 delete sahimoncart
+🔥 6. See Logs
+
+Live logs:
+
+pm2 logs sahimoncart
+Only errors:
+pm2 logs sahimoncart --err
+🔥 7. Monitor CPU / RAM
+pm2 monit
+
+Shows:
+
+CPU usage
+Memory
+Workers
+Live stats
+🔥 8. Test Load Balancing
+
+Since PM2 cluster uses same port:
+
+http://localhost:5000
+
+Workers share port internally.
+
+Add test route in app.js
+app.get("/test", (req, res) => {
+  res.json({
+    pid: process.pid,
+    port: PORT
+  });
+});
+Test in browser console:
+fetch("/api/test")
+  .then(res => res.json())
+  .then(console.log);
+
+OR direct:
+
+http://localhost:5000/test
+
+Run many times.
+
+Expected:
+pid changes every request
+
+Example:
+
+{ pid: 1120 }
+{ pid: 3340 }
+{ pid: 2288 }
+
+👉 That means PM2 load balancing works.
+
+🔥 9. Scale Workers Manually
+
+Use specific count:
+
+pm2 start app.js -i 4 --name sahimoncart
+
+Use only 4 workers.
+
+🔥 10. Increase / Decrease Later
+pm2 scale sahimoncart 6
+
+Now 6 workers.
+
+🔥 11. Auto Start on PC Restart
+pm2 save
+pm2 startup
+🔥 12. Reload Without Downtime
+
+Best for updates:
+
+pm2 reload sahimoncart
+
+No downtime restart.
+
+🔥 13. Frontend Connection
+
+In Vite config proxy, target:
+
+target: "http://localhost:5000"
+
+Because PM2 serves on 5000.
+
+🎯 Best Daily Commands For You
+pm2 list
+pm2 logs
+pm2 monit
+pm2 restart sahimoncart
+pm2 stop sahimoncart
+pm2 delete sahimoncart
+🚀 Recommended Setup for You
+Start daily:
+pm2 start app.js -i max --name sahimoncart
+Check:
+pm2 monit

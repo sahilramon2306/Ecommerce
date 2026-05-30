@@ -1,6 +1,6 @@
 const mongoose = require("mongoose"); 
 const productModel = require('../model/product.js');
-
+const categoryModel = require("../model/category.js");
 
 
 // Add Product (Admin)
@@ -12,17 +12,23 @@ const addProduct = async (req, res) => {
       price,
       salePrice,
       category,
+      subCategory,
+      childCategory, 
       brand,
       stock,
       lowStockThreshold,
       trackStock
     } = req.body;
 
+    /* ================= VALIDATION ================= */
+
     if (
       !name?.trim() ||
       !description?.trim() ||
       price === undefined ||
-      !category?.trim() ||
+      !category ||
+      !subCategory ||
+      !childCategory || 
       !brand?.trim() ||
       stock === undefined
     ) {
@@ -32,24 +38,71 @@ const addProduct = async (req, res) => {
       });
     }
 
-    if (salePrice !== undefined && salePrice > price) {
+    if (!mongoose.Types.ObjectId.isValid(category)) {
+      return res.status(400).json({ success: false, message: "Invalid category ID" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(subCategory)) {
+      return res.status(400).json({ success: false, message: "Invalid subcategory ID" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(childCategory)) {
+      return res.status(400).json({ success: false, message: "Invalid child category ID" });
+    }
+
+    /* ================= RELATION VALIDATION 🔥 ================= */
+
+    const categoryData = await categoryModel.findById(category);
+    const subCategoryData = await categoryModel.findById(subCategory);
+    const childCategoryData = await categoryModel.findById(childCategory);
+
+    // Level 1
+    if (!categoryData || categoryData.parent !== null) {
+      return res.status(400).json({ success: false, message: "Invalid category" });
+    }
+
+    // Level 2
+    if (!subCategoryData || subCategoryData.parent?.toString() !== category) {
+      return res.status(400).json({
+        success: false,
+        message: "Subcategory does not belong to category"
+      });
+    }
+
+    // Level 3 
+    if (!childCategoryData || childCategoryData.parent?.toString() !== subCategory) {
+      return res.status(400).json({
+        success: false,
+        message: "Child category does not belong to subcategory"
+      });
+    }
+
+    /* ================= PRICE ================= */
+
+    if (salePrice !== undefined && Number(salePrice) > Number(price)) {
       return res.status(400).json({
         success: false,
         message: "Sale price cannot be greater than actual price."
       });
     }
 
+    /* ================= IMAGES ================= */
+
     let images = [];
     if (req.files?.length > 0) {
       images = req.files.map(file => `/uploads/products/${file.filename}`);
     }
 
+    /* ================= CREATE ================= */
+
     const newProduct = new productModel({
       name: name.trim(),
       description: description.trim(),
       price: Number(price),
-      salePrice: salePrice !== undefined ? Number(salePrice) : undefined,
-      category: category.trim(),
+      salePrice: salePrice ? Number(salePrice) : undefined,
+      category,
+      subCategory,
+      childCategory, 
       brand: brand.trim(),
       stock: Number(stock),
       lowStockThreshold: lowStockThreshold ?? 5,
@@ -87,11 +140,16 @@ const updateProduct = async (req, res) => {
       price,
       salePrice,
       category,
+      subCategory,
+      childCategory, 
       brand,
       stock,
       isActive
     } = req.body;
 
+    const updateData = {};
+
+    /* ================= BASIC ================= */
 
     if (salePrice && price && Number(salePrice) > Number(price)) {
       return res.status(400).json({
@@ -100,24 +158,66 @@ const updateProduct = async (req, res) => {
       });
     }
 
-   
-    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description.trim();
+    if (price !== undefined) updateData.price = Number(price);
+    if (salePrice !== undefined) updateData.salePrice = Number(salePrice);
 
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (price !== undefined) updateData.price = price;
-    if (salePrice !== undefined) updateData.salePrice = salePrice;
-    if (category !== undefined) updateData.category = category;
-    if (brand !== undefined) updateData.brand = brand;
-    if (stock !== undefined) updateData.stock = stock;
+    /* ================= VALIDATION ================= */
+
+    if (category !== undefined) {
+      if (!mongoose.Types.ObjectId.isValid(category)) {
+        return res.status(400).json({ success: false, message: "Invalid category ID" });
+      }
+      updateData.category = category;
+    }
+
+    if (subCategory !== undefined) {
+      if (!mongoose.Types.ObjectId.isValid(subCategory)) {
+        return res.status(400).json({ success: false, message: "Invalid subcategory ID" });
+      }
+      updateData.subCategory = subCategory;
+    }
+
+    if (childCategory !== undefined) {
+      if (!mongoose.Types.ObjectId.isValid(childCategory)) {
+        return res.status(400).json({ success: false, message: "Invalid child category ID" });
+      }
+      updateData.childCategory = childCategory;
+    }
+
+    /* ================= RELATION CHECK 🔥 ================= */
+
+    if (category && subCategory && childCategory) {
+      const subCat = await categoryModel.findById(subCategory);
+      const childCat = await categoryModel.findById(childCategory);
+
+      if (!subCat || subCat.parent?.toString() !== category) {
+        return res.status(400).json({
+          success: false,
+          message: "Subcategory does not belong to category"
+        });
+      }
+
+      if (!childCat || childCat.parent?.toString() !== subCategory) {
+        return res.status(400).json({
+          success: false,
+          message: "Child category does not belong to subcategory"
+        });
+      }
+    }
+
+    if (brand !== undefined) updateData.brand = brand.trim();
+    if (stock !== undefined) updateData.stock = Number(stock);
     if (isActive !== undefined) updateData.isActive = isActive;
 
-  
-    if (req.files && req.files.length > 0) {
-      updateData.images = req.files.map(
-        file => `/uploads/products/${file.filename}`
-      );
+    /* ================= IMAGES ================= */
+
+    if (req.files?.length > 0) {
+      updateData.images = req.files.map(file => `/uploads/products/${file.filename}`);
     }
+
+    /* ================= UPDATE ================= */
 
     const updatedProduct = await productModel.findByIdAndUpdate(
       productId,
@@ -595,6 +695,51 @@ const rateProduct = async (req, res) => {
   }
 };
 
+//-------------------------------------------------------------------------------------------------------------
+const getProductsByCategoryPublic = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID"
+      });
+    }
+
+    // 🔥 Get subcategories
+    const subcategories = await categoryModel.find({
+      parent: categoryId,
+      status: true
+    });
+
+    const categoryIds = [
+      categoryId,
+      ...subcategories.map(c => c._id)
+    ];
+
+    // 🔥 Get products
+    const products = await productModel.find({
+      category: { $in: categoryIds },
+      isActive: true
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products
+    });
+
+  } catch (error) {
+    console.error("❌ getProductsByCategoryPublic error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+
 
 
 
@@ -617,5 +762,6 @@ module.exports = {
   getSingleProductDetails: getSingleProductDetails,
   updateProductStock: updateProductStock,
   updateProductStatus: updateProductStatus,
-  rateProduct: rateProduct
+  rateProduct: rateProduct,
+  getProductsByCategoryPublic: getProductsByCategoryPublic
 }

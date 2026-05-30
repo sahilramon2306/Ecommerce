@@ -1,18 +1,49 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta http-equiv="Permissions-Policy" content="otp-credentials=()">
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.png" />
+
+    <meta
+      http-equiv="Permissions-Policy"
+      content="otp-credentials=(), camera=(), microphone=(), geolocation=()"
+    />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SahimonCart</title>
+    <meta name="theme-color" content="#0f6b5f" />
+    <meta name="color-scheme" content="light dark" />
+
+    <meta
+      name="description"
+      content="SahimonCart is a modern ecommerce platform for premium products, secure checkout, fast delivery, and smooth customer support."
+    />
+
+    <meta property="og:title" content="SahimonCart" />
+    <meta
+      property="og:description"
+      content="Shop premium products with secure checkout, fast delivery, and smooth customer support."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo.png" />
+
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <link rel="preconnect" href="https://checkout.razorpay.com" />
+    <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+
+    <title>SahimonCart | Premium Ecommerce Experience</title>
   </head>
+
   <body>
+    <noscript>
+      <div class="noscript-warning">
+        SahimonCart needs JavaScript enabled to run properly.
+      </div>
+    </noscript>
+
     <div id="root"></div>
 
-    <!-- Razorpay Script -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

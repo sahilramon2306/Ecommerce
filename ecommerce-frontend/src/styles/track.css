@@ -1,0 +1,377 @@
+:root {
+  --track-bg: #f6f8fb;
+  --track-card: #ffffff;
+  --track-text: #101828;
+  --track-muted: #667085;
+  --track-border: #e4e7ec;
+  --track-primary: #2563eb;
+  --track-success: #12b76a;
+  --track-warning: #f59e0b;
+  --track-danger: #ef4444;
+  --track-radius: 8px;
+  --track-shadow: 0 18px 40px rgba(16, 24, 40, 0.1);
+}
+
+.track-page {
+  min-height: 100vh;
+  background: var(--track-bg);
+  color: var(--track-text);
+  padding-bottom: 56px;
+}
+
+.track-hero {
+  padding: 70px 20px 110px;
+  text-align: center;
+  color: #ffffff;
+  background: #101828;
+}
+
+.track-hero span {
+  display: inline-flex;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: var(--track-radius);
+  background: rgba(255, 255, 255, 0.08);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.track-hero h1 {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.08;
+}
+
+.track-hero p {
+  max-width: 620px;
+  margin: 0 auto;
+  color: #cbd5e1;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.track-container {
+  width: min(100%, 860px);
+  margin: -56px auto 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.track-card,
+.track-result,
+.track-help {
+  border: 1px solid var(--track-border);
+  border-radius: var(--track-radius);
+  background: var(--track-card);
+  box-shadow: var(--track-shadow);
+}
+
+.track-card {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.track-input-wrap label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--track-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.track-input-wrap input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--track-border);
+  border-radius: var(--track-radius);
+  background: #f8fafc;
+  color: var(--track-text);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.track-input-wrap input:focus {
+  border-color: var(--track-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.track-card button {
+  height: 48px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--track-radius);
+  background: var(--track-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.track-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.track-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: var(--track-radius);
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.track-result {
+  margin-top: 22px;
+  padding: 28px;
+}
+
+.track-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.track-result-head p {
+  margin: 0 0 6px;
+  color: var(--track-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.track-result-head h2 {
+  margin: 0;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+
+.track-status {
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--track-radius);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.track-status.placed,
+.track-status.confirmed {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.track-status.shipped {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.track-status.delivered {
+  background: #ecfdf3;
+  color: #047857;
+}
+
+.track-status.cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.track-status.returned {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.track-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.track-summary div {
+  padding: 14px;
+  border: 1px solid var(--track-border);
+  border-radius: var(--track-radius);
+  background: #f8fafc;
+}
+
+.track-summary span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--track-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.track-summary strong {
+  color: var(--track-text);
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.track-progress {
+  height: 8px;
+  margin-bottom: 28px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.track-progress div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--track-primary);
+  transition: width 0.4s ease;
+}
+
+.track-timeline {
+  position: relative;
+  display: grid;
+  gap: 22px;
+}
+
+.track-timeline::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--track-border);
+}
+
+.track-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 14px;
+}
+
+.track-dot {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--track-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 0 0 5px #ffffff;
+}
+
+.track-step.completed .track-dot {
+  border-color: var(--track-success);
+  background: var(--track-success);
+}
+
+.track-step.active .track-dot {
+  border-color: var(--track-primary);
+}
+
+.track-step.active .track-dot::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track-primary);
+}
+
+.track-step.pending {
+  color: #98a2b3;
+}
+
+.track-step h4 {
+  margin: 2px 0 4px;
+  font-size: 15px;
+}
+
+.track-step p {
+  margin: 0;
+  color: var(--track-muted);
+  font-size: 14px;
+}
+
+.track-special {
+  padding: 16px;
+  border: 1px solid #fed7aa;
+  border-radius: var(--track-radius);
+  background: #fff7ed;
+}
+
+.track-special h3 {
+  margin: 0 0 6px;
+  color: #9a3412;
+}
+
+.track-special p {
+  margin: 0;
+  color: #c2410c;
+  line-height: 1.6;
+}
+
+.track-help {
+  margin-top: 22px;
+  padding: 18px;
+  box-shadow: none;
+}
+
+.track-help h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.track-help p {
+  margin: 0;
+  color: var(--track-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .track-hero {
+    padding: 56px 16px 92px;
+  }
+
+  .track-container {
+    padding: 0 14px;
+  }
+
+  .track-card {
+    grid-template-columns: 1fr;
+  }
+
+  .track-card button {
+    width: 100%;
+  }
+
+  .track-result {
+    padding: 18px;
+  }
+
+  .track-result-head {
+    flex-direction: column;
+  }
+
+  .track-summary {
+    grid-template-columns: 1fr;
+  }
+}

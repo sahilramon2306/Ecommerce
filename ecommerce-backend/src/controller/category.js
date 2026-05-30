@@ -318,19 +318,40 @@ const changeCategoryStatus = async (req, res) => {
 const getAllCategories = async (req, res) => {
   try {
 
-    /* QUERY PARAMS */
+    /* ================= GET QUERY ================= */
 
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit);
     const search = req.query.search || "";
     const sortField = req.query.sort || "createdAt";
     const sortOrder = req.query.order === "asc" ? 1 : -1;
     const status = req.query.status;
     const parent = req.query.parent;
 
+    /* ================= FULL DATA MODE (FOR DROPDOWN) ================= */
+
+    if (req.query.all === "true") {
+      const categories = await categoryModel
+        .find({})
+        .populate("parent", "name slug")
+        .sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        message: "All categories fetched successfully",
+        data: categories
+      });
+    }
+
+    /* ================= DEFAULT LIMIT ================= */
+
+    if (!limit) {
+      limit = 15; // default pagination
+    }
+
     const skip = (page - 1) * limit;
 
-    /* FILTER OBJECT */
+    /* ================= FILTER ================= */
 
     const filter = {};
 
@@ -349,7 +370,7 @@ const getAllCategories = async (req, res) => {
       filter.parent = parent;
     }
 
-    /* FETCH DATA */
+    /* ================= FETCH DATA ================= */
 
     const categories = await categoryModel
       .find(filter)
@@ -358,9 +379,11 @@ const getAllCategories = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    /* TOTAL COUNT */
+    /* ================= TOTAL COUNT ================= */
 
     const totalCategories = await categoryModel.countDocuments(filter);
+
+    /* ================= RESPONSE ================= */
 
     return res.status(200).json({
       success: true,
@@ -500,6 +523,8 @@ const getSubcategoriesPublic = async (req, res) => {
   }
 };
 
+//------------------------------------------------------------------------------------------------------------
+
 
 
 
@@ -521,5 +546,5 @@ module.exports = {
   getAllCategories: getAllCategories,
   getAllActiveCategoriesPublic: getAllActiveCategoriesPublic,
   getSingleCategoryPublic: getSingleCategoryPublic,
-  getSubcategoriesPublic: getSubcategoriesPublic
+  getSubcategoriesPublic: getSubcategoriesPublic,
 };

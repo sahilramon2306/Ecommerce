@@ -783,6 +783,57 @@ const getOrderInvoiceAdmin = async (req, res) => {
   }
 };
 
+//-----------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------
+// Public Track Order Status
+const publicTrackOrderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID is required",
+      });
+    }
+
+    const order = await orderModel
+      .findById(orderId)
+      .select("orderStatus paymentStatus paymentType createdAt updatedAt totalAmount");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status fetched successfully",
+      data: {
+        orderId: order._id,
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        paymentType: order.paymentType,
+        totalAmount: order.totalAmount,
+        orderedOn: order.createdAt,
+        lastUpdatedOn: order.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Public track order error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+
+
 
 
 
@@ -802,5 +853,6 @@ module.exports = {
   getOrderByIdAdmin: getOrderByIdAdmin,
   updateOrderStatusAdmin: updateOrderStatusAdmin,
   updatePaymentStatusAdmin: updatePaymentStatusAdmin,
-  getOrderInvoiceAdmin: getOrderInvoiceAdmin
+  getOrderInvoiceAdmin: getOrderInvoiceAdmin,
+  publicTrackOrderStatus: publicTrackOrderStatus
 };

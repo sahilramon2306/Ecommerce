@@ -1,5 +1,6 @@
 const userController = require("../controller/user.js");
 const authMiddleware = require("../middleware/auth.js");
+const adminMiddleware = require("../middleware/adminMiddleware.js");
 
 // set Routes for User
 const setRouter = (app) => {
@@ -18,6 +19,12 @@ const setRouter = (app) => {
     app.post("/reset-Password", userController.resetPassword);
     app.put("/change-Password", authMiddleware, userController.changePassword);
     app.post("/refresh-Token", authMiddleware, userController.refreshToken);
+    app.get("/get-All-Users-Admin", authMiddleware, adminMiddleware, userController.getAllUsersAdmin);
+    app.get("/get-Single-User-Admin/:userId", authMiddleware, adminMiddleware, userController.getSingleUserAdmin);
+    app.put("/change-User-Status-Admin/:userId", authMiddleware, adminMiddleware, userController.changeUserStatusAdmin);
+    app.put("/change-User-Role-Admin/:userId", authMiddleware, adminMiddleware, userController.changeUserRoleAdmin);
+    app.delete("/delete-User-Admin/:userId", authMiddleware, adminMiddleware, userController.deleteUserAdmin);
+    app.get("/public-site-stats", userController.getPublicSiteStats);
 };
 
 module.exports = { setRouter };

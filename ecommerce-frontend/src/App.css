@@ -1,81 +1,229 @@
 /* ================= GLOBAL RESET ================= */
 
+:root {
+  --app-bg: #f7f8fb;
+  --app-surface: #ffffff;
+  --app-surface-soft: #f2f5f8;
+  --app-text: #101828;
+  --app-muted: #667085;
+  --app-border: #e4e7ec;
+  --app-primary: #0f6b5f;
+  --app-primary-dark: #0a4f47;
+  --app-danger: #dc2626;
+  --app-shadow: 0 20px 55px rgba(17, 24, 39, 0.08);
+  --app-radius: 8px;
+  --app-page-max: 1440px;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+[data-theme="dark"] {
+  --app-bg: #080d14;
+  --app-surface: #111827;
+  --app-surface-soft: #162033;
+  --app-text: #f8fafc;
+  --app-muted: #a6b0c2;
+  --app-border: rgba(148, 163, 184, 0.18);
+  --app-primary: #2dd4bf;
+  --app-primary-dark: #14b8a6;
+  --app-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+}
+
 *,
 *::before,
 *::after {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
-  height: 100%;
-  min-height: 100vh;
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--bg, #f8fafc);
-  color: var(--text, #0f172a);
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(15, 107, 95, 0.09), transparent 340px),
+    var(--app-bg);
+  color: var(--app-text);
   overflow-x: hidden;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--app-primary);
 }
 
 /* ================= ROOT STRUCTURE ================= */
 
 #root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* App Layout Wrapper */
 .app-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(15, 107, 95, 0.045), transparent 420px),
+    var(--app-bg);
 }
 
 /* ================= MAIN CONTENT ================= */
 
 .main-content {
-  flex: 1; /* pushes footer to bottom */
+  flex: 1;
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 2.5rem 2rem;
+  min-height: 60vh;
+}
+
+/*
+  Use this class inside individual pages when you want a centered page body:
+  <section className="app-page-container">...</section>
+*/
+.app-page-container {
+  width: min(100% - 48px, var(--app-page-max));
+  margin-inline: auto;
+}
+
+.main-content--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ================= GLOBAL LOADING ================= */
 
 .global-loading {
-  flex: 1;
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  font-size: 1.2rem;
-  color: #64748b;
+  display: grid;
+  width: 100%;
+  min-height: clamp(420px, 68vh, 720px);
+  place-items: center;
+  padding: 32px 20px;
 }
 
-/* ================= SMOOTH THEME TRANSITION ================= */
+.global-loading__card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(100%, 420px);
+  padding: 22px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+  box-shadow: var(--app-shadow);
+  backdrop-filter: blur(18px);
+}
 
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+.global-loading__card h1 {
+  margin: 0 0 4px;
+  color: var(--app-text);
+  font-size: 1rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.global-loading__card p {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+/* ================= TOASTS ================= */
+
+.app-toaster {
+  z-index: 9999;
+}
+
+/* ================= ACCESSIBILITY ================= */
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--app-primary) 30%, transparent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* ================= RESPONSIVE ================= */
 
 @media (max-width: 1024px) {
-  .main-content {
-    padding: 2rem 1.5rem;
+  .app-page-container {
+    width: min(100% - 36px, var(--app-page-max));
   }
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    padding: 1.5rem 1rem;
+  .global-loading {
+    min-height: 62vh;
+  }
+
+  .global-loading__card {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-page-container {
+    width: min(100% - 32px, var(--app-page-max));
+  }
+
+  .global-loading__card {
+    padding: 18px;
   }
 }

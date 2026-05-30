@@ -3,16 +3,25 @@ import "../styles/ourstory.css";
 const OurStory = () => {
   return (
     <div className="story-page">
-      <div className="story-hero">
+      {/* Hero Section with Glassmorphism effect */}
+      <section className="story-hero">
+        <div className="hero-badge">Since 2023</div>
         <h1>Our Story</h1>
-        <p>From a small idea to a premium lifestyle brand</p>
-      </div>
+        <p>Crafting a premium lifestyle, one curated product at a time.</p>
+      </section>
 
-      <div className="story-content">
+      <section className="story-content">
+        <div className="section-header">
+          <span>The Journey</span>
+          <h2>How we built SahimonCart</h2>
+        </div>
+
         <div className="story-timeline">
-          <div className="timeline-item">
-            <div className="year">2023</div>
-            <div className="content">
+          <div className="timeline-line"></div>
+          
+          <div className="timeline-item left">
+            <div className="year-bubble">2023</div>
+            <div className="content-card">
               <h3>The Beginning</h3>
               <p>
                 SahimonCart started in a small apartment in Kolkata with one goal — 
@@ -21,21 +30,21 @@ const OurStory = () => {
             </div>
           </div>
 
-          <div className="timeline-item">
-            <div className="year">2024</div>
-            <div className="content">
-              <h3>Growth &amp; Trust</h3>
+          <div className="timeline-item right">
+            <div className="year-bubble">2024</div>
+            <div className="content-card">
+              <h3>Growth & Trust</h3>
               <p>
-                Within a year, we expanded our collection and earned the trust of 
-                thousands of customers who now consider SahimonCart their go-to destination 
+                We expanded our collection and earned the trust of 
+                thousands of customers who now consider us their go-to destination 
                 for premium lifestyle products.
               </p>
             </div>
           </div>
 
-          <div className="timeline-item">
-            <div className="year">2025</div>
-            <div className="content">
+          <div className="timeline-item left">
+            <div className="year-bubble">2025</div>
+            <div className="content-card">
               <h3>Looking Ahead</h3>
               <p>
                 Today, we continue to grow while staying true to our core values: 
@@ -45,16 +54,33 @@ const OurStory = () => {
           </div>
         </div>
 
-        <div className="founder-note">
-          <h2>A Note from the Founder</h2>
-          <p>
-            "We believe shopping should be an experience, not just a transaction. 
-            Every product on SahimonCart is chosen with love, care, and the promise 
-            that it will bring joy and value to your life."
-          </p>
-          <p className="founder-name">— Sahil Reza, Founder</p>
+        {/* Founder Section */}
+        <div className="founder-section">
+          <div className="founder-grid">
+            <div className="founder-image-container">
+              {/* Replace the src with your actual portrait path */}
+              <img 
+                src="/public/founder_picture.png" 
+                alt="Sahil Reza" 
+                className="founder-image"
+              />
+              <div className="image-decoration"></div>
+            </div>
+            <div className="founder-text">
+              <span className="quote-icon">“</span>
+              <p>
+                We believe shopping should be an experience, not just a transaction. 
+                Every product on SahimonCart is chosen with love, care, and the promise 
+                that it will bring joy and value to your life.
+              </p>
+              <div className="founder-info">
+                <h4 className="founder-name">Sahil Reza</h4>
+                <p className="founder-title">Founder, SahimonCart</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

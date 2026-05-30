@@ -50,6 +50,11 @@ const userSchema = new mongoose.Schema(
       default: "customer"
     },
 
+    isBlocked: {
+      type: Boolean,
+      default: false
+    },
+
     addresses: {
       type: [addressSchema],
       default: []
