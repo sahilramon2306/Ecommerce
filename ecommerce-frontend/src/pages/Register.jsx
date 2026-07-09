@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -8,48 +8,29 @@ import {
   Loader2,
   Lock,
   Mail,
-  MapPin,
   Phone,
   ShieldCheck,
-  ShoppingBag,
+  Zap,
   User,
+  LayoutTemplate
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { registerUser } from "../api/authApi";
+import { registerUser, verifyRegistrationOTP } from "../api/authApi";
 import "../styles/register.css";
+
+const OTP_VALID_SECONDS = 10 * 60;
 
 const initialFormData = {
   name: "",
   email: "",
   phone: "",
   password: "",
-  addresses: [
-    {
-      postOffice: "",
-      policeStation: "",
-      pincode: "",
-      state: "",
-      district: "",
-      city: "",
-      addressLine: "",
-    },
-  ],
 };
 
 const accountFields = [
-  { name: "name", label: "Full name", type: "text", icon: User, autoComplete: "name" },
-  { name: "email", label: "Email address", type: "email", icon: Mail, autoComplete: "email" },
-  { name: "phone", label: "Phone number", type: "tel", icon: Phone, autoComplete: "tel" },
-];
-
-const addressFields = [
-  { name: "addressLine", label: "Address line", placeholder: "House no, building, street", span: "full" },
-  { name: "city", label: "City", placeholder: "City" },
-  { name: "district", label: "District", placeholder: "District" },
-  { name: "state", label: "State", placeholder: "State" },
-  { name: "pincode", label: "Pincode", placeholder: "6 digit pincode" },
-  { name: "postOffice", label: "Post office", placeholder: "Post office" },
-  { name: "policeStation", label: "Police station", placeholder: "Police station" },
+  { name: "name", label: "Full name", type: "text", icon: User, autoComplete: "name", placeholder: "e.g. Jane Doe" },
+  { name: "email", label: "Work email", type: "email", icon: Mail, autoComplete: "email", placeholder: "jane@company.com" },
+  { name: "phone", label: "Phone number", type: "tel", icon: Phone, autoComplete: "tel", placeholder: "Enter 10 digits" },
 ];
 
 const Register = () => {
@@ -61,12 +42,31 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
-  const address = formData.addresses[0];
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(OTP_VALID_SECONDS);
 
+  const otpInputsRef = useRef([]);
+
+  // Timer Logic
+  useEffect(() => {
+    if (!otpStep || secondsLeft <= 0) return;
+    const timer = setInterval(() => {
+      setSecondsLeft((current) => Math.max(current - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpStep, secondsLeft]);
+
+  const formattedTime = `${String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:${String(
+    secondsLeft % 60
+  ).padStart(2, "0")}`;
+
+  // Password Strength Logic
   const passwordChecks = useMemo(() => {
     const password = formData.password;
-
     return [
       { label: "At least 6 characters", valid: password.length >= 6 },
       { label: "Contains a number", valid: /\d/.test(password) },
@@ -79,102 +79,42 @@ const Register = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     setFormData((current) => ({
       ...current,
       [name]: name === "phone" ? value.replace(/\D/g, "").slice(0, 10) : value,
     }));
   };
 
-  const handleAddressChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((current) => {
-      const updatedAddress = {
-        ...current.addresses[0],
-        [name]: name === "pincode" ? value.replace(/\D/g, "").slice(0, 6) : value,
-      };
-
-      return {
-        ...current,
-        addresses: [updatedAddress],
-      };
-    });
-  };
-
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast.error("Enter your full name");
-      return false;
-    }
-
-    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      toast.error("Enter a valid email address");
-      return false;
-    }
-
-    if (formData.phone.length !== 10) {
-      toast.error("Enter a valid 10 digit phone number");
-      return false;
-    }
-
-    if (passwordScore < 2) {
-      toast.error("Choose a stronger password");
-      return false;
-    }
-
-    if (formData.password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return false;
-    }
-
-    if (!address.addressLine.trim() || !address.city.trim() || !address.district.trim() || !address.state.trim()) {
-      toast.error("Complete your shipping address");
-      return false;
-    }
-
-    if (address.pincode.length !== 6) {
-      toast.error("Enter a valid 6 digit pincode");
-      return false;
-    }
-
-    if (!acceptedTerms) {
-      toast.error("Please accept the terms to continue");
-      return false;
-    }
-
+    if (!formData.name.trim()) { toast.error("Enter your full name"); return false; }
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) { toast.error("Enter a valid email address"); return false; }
+    if (formData.phone.length !== 10) { toast.error("Enter a valid 10 digit phone number"); return false; }
+    if (passwordScore < 2) { toast.error("Choose a stronger password"); return false; }
+    if (formData.password !== confirmPassword) { toast.error("Passwords do not match"); return false; }
+    if (!acceptedTerms) { toast.error("Please accept the terms to continue"); return false; }
     return true;
   };
 
+  const getCleanRegistrationData = () => ({
+    ...formData,
+    email: formData.email.trim().toLowerCase(),
+    name: formData.name.trim(),
+    phone: formData.phone.trim(),
+  });
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     if (!validateForm()) return;
-
     try {
       setLoading(true);
-
-      await registerUser({
-        ...formData,
-        email: formData.email.trim().toLowerCase(),
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        addresses: [
-          {
-            ...address,
-            addressLine: address.addressLine.trim(),
-            city: address.city.trim(),
-            district: address.district.trim(),
-            state: address.state.trim(),
-            pincode: address.pincode.trim(),
-            postOffice: address.postOffice.trim(),
-            policeStation: address.policeStation.trim(),
-          },
-        ],
-      });
-
-      toast.success("Registration successful. Please login.");
-      navigate("/login");
+      const cleanData = getCleanRegistrationData();
+      await registerUser(cleanData);
+      setPendingEmail(cleanData.email);
+      setOtpStep(true);
+      setOtp("");
+      setSecondsLeft(OTP_VALID_SECONDS);
+      toast.success("OTP sent to your email.");
+      setTimeout(() => { otpInputsRef.current[0]?.focus(); }, 100);
     } catch (error) {
       toast.error(error.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -182,189 +122,287 @@ const Register = () => {
     }
   };
 
-  return (
-    <main className="register-page">
-      <section className="register-shell">
-        <aside className="register-brand-panel" aria-label="SahimonCart account benefits">
-          <div className="register-brand-content">
-            <span>
-              <ShoppingBag size={16} aria-hidden="true" />
-              SahimonCart
-            </span>
-            <h1>Create your shopping account</h1>
-            <p>Save addresses, track orders, and move through checkout faster.</p>
+  // ==========================================
+  // WORKING OTP LOGIC START
+  // ==========================================
 
-            <div className="register-benefits">
-              <div>
-                <ShieldCheck size={18} aria-hidden="true" />
-                <span>Secure account setup</span>
-              </div>
-              <div>
-                <MapPin size={18} aria-hidden="true" />
-                <span>Checkout-ready address</span>
-              </div>
-              <div>
-                <CheckCircle2 size={18} aria-hidden="true" />
-                <span>Order history access</span>
-              </div>
+  const handleOtpDigitChange = (index, value) => {
+    if (isNaN(value)) return;
+
+    // Create an array of exactly 6 elements to manage the string properly
+    const otpArray = Array.from({ length: 6 }, (_, i) => otp[i] || "");
+    
+    // Take only the last character so users can overwrite
+    otpArray[index] = value.substring(value.length - 1);
+    const newOtp = otpArray.join("");
+    setOtp(newOtp);
+
+    // Auto-focus next input
+    if (value !== "" && index < 5 && otpInputsRef.current[index + 1]) {
+      otpInputsRef.current[index + 1].focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, event) => {
+    // Jump back on backspace if current box is empty
+    if (event.key === "Backspace" && !otp[index] && index > 0) {
+      otpInputsRef.current[index - 1].focus();
+    }
+  };
+
+  const handleOtpPaste = (event) => {
+    event.preventDefault();
+    // Get pasted data, grab first 6 chars, remove letters/symbols
+    const pastedData = event.clipboardData.getData("text/plain").slice(0, 6).replace(/\D/g, "");
+    setOtp(pastedData);
+    
+    // Focus the end of the pasted string
+    const focusIndex = Math.min(pastedData.length, 5);
+    if (otpInputsRef.current[focusIndex]) {
+      otpInputsRef.current[focusIndex].focus();
+    }
+  };
+
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    
+    // Remove spaces in case user skipped a box
+    const cleanOtp = otp.replace(/\s/g, ''); 
+    
+    if (cleanOtp.length !== 6) {
+      toast.error("Please enter a valid 6-digit code");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await verifyRegistrationOTP({ email: pendingEmail, otp: cleanOtp });
+      toast.success("Account created successfully!");
+      navigate("/login");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid or expired OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      setResendLoading(true);
+      const cleanData = getCleanRegistrationData();
+      await registerUser(cleanData); 
+      setSecondsLeft(OTP_VALID_SECONDS);
+      setOtp("");
+      toast.success("New OTP sent to your email.");
+      setTimeout(() => { otpInputsRef.current[0]?.focus(); }, 100);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // ==========================================
+  // WORKING OTP LOGIC END
+  // ==========================================
+
+  return (
+    <main className="saas-split-layout">
+      
+      {/* LEFT PANEL: Abstract SaaS Imagery (Desktop Only) */}
+      <section className="saas-visual-panel">
+        <div className="saas-visual-content">
+          <div className="saas-logo">
+            <LayoutTemplate size={24} />
+            <span>SahimonCart</span>
+          </div>
+          <div className="saas-hero-text">
+            <h1>Build faster.<br />Scale smarter.</h1>
+            <p>Join thousands of teams shipping better products with our enterprise-grade platform.</p>
+          </div>
+          <div className="saas-feature-list">
+            <div className="saas-feature-item">
+              <ShieldCheck size={20} className="feature-icon" />
+              <span>SOC2 Type II Certified Security</span>
+            </div>
+            <div className="saas-feature-item">
+              <Zap size={20} className="feature-icon" />
+              <span>Lightning fast global edge network</span>
             </div>
           </div>
-        </aside>
+        </div>
+      </section>
 
-        <section className="register-form-section" aria-labelledby="register-title">
-          <div className="register-card">
-            <div className="register-heading">
-              <span>
-                <User size={16} aria-hidden="true" />
-                New account
-              </span>
-              <h2 id="register-title">Register</h2>
-              <p>Enter your details and primary shipping address.</p>
-            </div>
+      {/* RIGHT PANEL: Form */}
+      <section className="saas-form-panel">
+        
+        {/* CRAZY MOBILE HEADER */}
+        <div className="mobile-crazy-header">
+          <div className="mobile-logo">
+            <LayoutTemplate size={28} />
+            <span>SahimonCart</span>
+          </div>
+          <p>The premium shopping experience</p>
+        </div>
 
-            <form onSubmit={handleSubmit} className="register-form">
-              <div className="register-form-grid">
-                {accountFields.map(({ name, label, type, icon: Icon, autoComplete }) => (
-                  <label className="register-field" key={name}>
-                    <span>{label}</span>
-                    <div className="register-input-wrap">
-                      <Icon size={18} aria-hidden="true" />
+        <div className="saas-form-container">
+          
+          <div className="saas-form-header">
+            <h2>{otpStep ? "Verify your email" : "Create your account"}</h2>
+            <p>
+              {otpStep
+                ? `We sent a 6-digit code to ${pendingEmail}`
+                : "Start your 14-day free trial. No credit card required."}
+            </p>
+          </div>
+
+          {otpStep ? (
+            <form onSubmit={handleVerifyOtp} className="saas-otp-form">
+              <div className="saas-otp-input-group" onPaste={handleOtpPaste}>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { otpInputsRef.current[index] = el; }}
+                    type="text"
+                    value={otp[index] || ""}
+                    onChange={(e) => handleOtpDigitChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onFocus={(e) => e.target.select()} // Highlights text automatically on click
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? "one-time-code" : "off"}
+                    className="saas-otp-box"
+                    disabled={secondsLeft === 0}
+                    required
+                  />
+                ))}
+              </div>
+
+              <div className={`saas-otp-timer ${secondsLeft === 0 ? "expired" : ""}`}>
+                {secondsLeft > 0 ? (
+                  <span>Code expires in <strong>{formattedTime}</strong></span>
+                ) : (
+                  <span>Code expired</span>
+                )}
+              </div>
+
+              <button type="submit" className="saas-primary-btn" disabled={loading || secondsLeft === 0}>
+                {loading ? <Loader2 className="saas-spinner" size={18} /> : "Verify Email"}
+              </button>
+
+              <div className="saas-otp-actions">
+                <button type="button" onClick={handleResendOtp} disabled={loading || resendLoading}>
+                  {resendLoading ? "Sending..." : "Resend code"}
+                </button>
+                <span className="saas-dot-divider">•</span>
+                <button type="button" onClick={() => { setOtpStep(false); setOtp(""); setSecondsLeft(OTP_VALID_SECONDS); }}>
+                  Change email
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="saas-register-form">
+              <div className="saas-form-grid">
+                
+                {accountFields.map(({ name, label, type, icon: Icon, autoComplete, placeholder }) => (
+                  <div className="saas-input-group" key={name}>
+                    <label htmlFor={name}>{label}</label>
+                    <div className="saas-input-wrapper">
+                      <Icon size={18} className="saas-input-icon" />
                       <input
+                        id={name}
                         name={name}
                         type={type}
                         value={formData[name]}
                         onChange={handleChange}
                         autoComplete={autoComplete}
-                        inputMode={name === "phone" ? "numeric" : "text"}
+                        placeholder={placeholder}
                         required
                       />
                     </div>
-                  </label>
+                  </div>
                 ))}
 
-                <label className="register-field">
-                  <span>Password</span>
-                  <div className="register-input-wrap">
-                    <Lock size={18} aria-hidden="true" />
+                <div className="saas-input-group">
+                  <label htmlFor="password">Password</label>
+                  <div className="saas-input-wrapper">
+                    <Lock size={18} className="saas-input-icon" />
                     <input
+                      id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleChange}
-                      autoComplete="new-password"
+                      placeholder="Create a password"
                       required
                     />
-                    <button
-                      type="button"
-                      className="register-icon-btn"
-                      onClick={() => setShowPassword((current) => !current)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    <button type="button" className="saas-eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                </label>
+                </div>
 
-                <label className="register-field">
-                  <span>Confirm password</span>
-                  <div className="register-input-wrap">
-                    <Lock size={18} aria-hidden="true" />
+                <div className="saas-input-group">
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <div className="saas-input-wrapper">
+                    <Lock size={18} className="saas-input-icon" />
                     <input
+                      id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={(event) => setConfirmPassword(event.target.value)}
-                      autoComplete="new-password"
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
                       required
                     />
-                    <button
-                      type="button"
-                      className="register-icon-btn"
-                      onClick={() => setShowConfirmPassword((current) => !current)}
-                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    <button type="button" className="saas-eye-btn" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                </label>
-              </div>
-
-              <div className="password-meter" data-strength={passwordScore}>
-                <div>
-                  <span />
-                  <span />
-                  <span />
                 </div>
-                <strong>{passwordStrength}</strong>
               </div>
 
-              <div className="password-checks">
+              {/* Minimalist Password Strength Meter */}
+              <div className="saas-strength-meter" data-score={passwordScore}>
+                <div className="saas-strength-bars">
+                  <div className="bar"></div>
+                  <div className="bar"></div>
+                  <div className="bar"></div>
+                </div>
+                <div className="saas-strength-labels">
+                  <span className="strength-text">{passwordStrength}</span>
+                </div>
+              </div>
+
+              <div className="saas-password-requirements">
                 {passwordChecks.map((check) => (
-                  <span className={check.valid ? "is-valid" : ""} key={check.label}>
-                    <CheckCircle2 size={15} aria-hidden="true" />
-                    {check.label}
+                  <span key={check.label} className={check.valid ? "met" : ""}>
+                    <CheckCircle2 size={14} /> {check.label}
                   </span>
                 ))}
               </div>
 
-              <section className="register-address-section" aria-labelledby="address-title">
-                <div className="register-section-heading">
-                  <span>
-                    <MapPin size={16} aria-hidden="true" />
-                    Shipping
-                  </span>
-                  <h3 id="address-title">Primary Address</h3>
-                </div>
-
-                <div className="register-form-grid">
-                  {addressFields.map((field) => (
-                    <label
-                      className={`register-field ${field.span === "full" ? "register-field--full" : ""}`}
-                      key={field.name}
-                    >
-                      <span>{field.label}</span>
-                      <input
-                        name={field.name}
-                        value={address[field.name]}
-                        placeholder={field.placeholder}
-                        onChange={handleAddressChange}
-                        inputMode={field.name === "pincode" ? "numeric" : "text"}
-                        required={!["postOffice", "policeStation"].includes(field.name)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <label className="register-terms">
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(event) => setAcceptedTerms(event.target.checked)}
-                />
-                <span>I agree to create an account and use SahimonCart services.</span>
+              <label className="saas-checkbox-container">
+                <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} />
+                <span className="saas-custom-checkbox"></span>
+                <span className="saas-checkbox-label">
+                  I agree to the <Link to="/terms-of-service">Terms of Service</Link> and <Link to="/privacy-policy">Privacy policy</Link>. 
+                </span>
               </label>
 
-              <button type="submit" className="register-submit" disabled={loading}>
+              <button type="submit" className="saas-primary-btn" disabled={loading}>
                 {loading ? (
-                  <>
-                    <Loader2 size={18} aria-hidden="true" />
-                    Creating account
-                  </>
+                  <Loader2 className="saas-spinner" size={18} />
                 ) : (
-                  <>
-                    Create account
-                    <ArrowRight size={18} aria-hidden="true" />
-                  </>
+                  <>Create Account <ArrowRight size={16} /></>
                 )}
               </button>
             </form>
+          )}
 
-            <div className="auth-switch">
-              Already have an account?
-              <Link to="/login">Login</Link>
-            </div>
+          <div className="saas-auth-footer">
+            Already have an account? <Link to="/login">Sign in to workspace</Link>
           </div>
-        </section>
+
+        </div>
       </section>
     </main>
   );

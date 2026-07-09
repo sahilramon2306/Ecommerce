@@ -1,4 +1,4 @@
-require("dotenv").config();   
+require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
@@ -6,10 +6,21 @@ const fs = require("fs");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const session = require("express-session");
+const { RedisStore } = require("connect-redis");
+const { createClient } = require("redis");
 const passport = require("./src/config/passport");
 const database = require("./www/db/db");
 
 const app = express();
+
+/* ------------------ Redis Client ------------------ */
+const redisClient = createClient({
+  url: process.env.REDIS_URL || "redis://127.0.0.1:6379",
+});
+redisClient.on("error", (err) => console.error("Redis Client Error", err));
+redisClient.connect().catch((err) =>
+  console.error("Redis connection failed", err)
+);
 
 /* ------------------ CORS ------------------ */
 app.use(
@@ -22,9 +33,15 @@ app.use(
 /* ------------------ Session (Required for OAuth) ------------------ */
 app.use(
   session({
-    secret: "oauth_secret_key",
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET || "oauth_secret_key",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   })
 );
 
@@ -92,15 +109,20 @@ app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Backend running",
-    port: PORT
+    port: PORT,
   });
 });
 
 app.get("/test", (req, res) => {
   res.json({
     port: PORT,
-    pid: process.pid
+    pid: process.pid,
   });
+});
+
+app.get("/session-test", (req, res) => {
+  req.session.testValue = "redis-session-ok";
+  res.json({ ok: true, sessionID: req.sessionID });
 });
 /* ------------------ 404 Handler ------------------ */
 app.use((req, res) => {

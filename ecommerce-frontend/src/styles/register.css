@@ -1,463 +1,472 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  --register-bg: #f6f7f9;
-  --register-surface: #ffffff;
-  --register-surface-soft: #f1f5f4;
-  --register-text: #111827;
-  --register-muted: #667085;
-  --register-soft: #98a2b3;
-  --register-border: #e4e7ec;
-  --register-border-strong: #cfd6df;
-  --register-primary: #0f6b5f;
-  --register-primary-dark: #084c44;
-  --register-danger: #dc2626;
-  --register-shadow-soft: 0 10px 26px rgba(17, 24, 39, 0.06);
-  --register-shadow: 0 18px 48px rgba(17, 24, 39, 0.08);
+  --saas-primary: #4F46E5;       
+  --saas-primary-hover: #4338CA; 
+  --saas-bg: #FFFFFF;
+  --saas-surface: #F9FAFB;       
+  --saas-text-main: #111827;     
+  --saas-text-muted: #6B7280;    
+  --saas-border: #E5E7EB;        
+  --saas-border-focus: #A5B4FC;  
+  --saas-ring: rgba(79, 70, 229, 0.15);
+  
+  --saas-success: #10B981;
+  --saas-warning: #F59E0B;
+  --saas-danger: #EF4444;
+  
+  --saas-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --saas-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.register-page {
-  min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(15, 107, 95, 0.08), transparent 420px),
-    var(--register-bg);
-  color: var(--register-text);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.register-page * {
+* {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.register-shell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1.1fr);
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--saas-surface); /* Updated to softer gray for mobile contrast */
+  color: var(--saas-text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-.register-brand-panel {
-  position: sticky;
-  top: 0;
-  min-height: 100vh;
+/* Split Layout */
+.saas-split-layout {
   display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-  padding: 42px;
-  color: #ffffff;
-  background:
-    linear-gradient(180deg, rgba(17, 24, 39, 0.28), rgba(17, 24, 39, 0.78)),
-    url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80");
-  background-position: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Left Panel - Visual/Brand (Desktop) */
+.saas-visual-panel {
+  flex: 1;
+  background: 
+    linear-gradient(135deg, rgba(17, 24, 39, 0.8) 0%, rgba(31, 41, 55, 0.95) 100%),
+    url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2064&auto=format&fit=crop');
   background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem;
+  color: white;
 }
 
-.register-brand-content {
-  max-width: 520px;
-}
-
-.register-brand-content > span,
-.register-heading > span,
-.register-section-heading > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.76rem;
-  font-weight: 850;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.register-brand-content > span {
-  color: #dff7f2;
-}
-
-.register-brand-content h1 {
-  margin: 14px 0 14px;
-  font-size: 3.4rem;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.register-brand-content p {
-  max-width: 440px;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 1.04rem;
-  line-height: 1.7;
-}
-
-.register-benefits {
-  display: grid;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.register-benefits div {
-  min-height: 46px;
+.saas-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: fit-content;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  font-size: 0.92rem;
-  font-weight: 760;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.register-form-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 44px 24px;
+.saas-hero-text {
+  margin-top: auto;
+  margin-bottom: 4rem;
 }
 
-.register-card {
-  width: min(760px, 100%);
-  padding: clamp(22px, 4vw, 34px);
-  border: 1px solid var(--register-border);
-  border-radius: 8px;
-  background: var(--register-surface);
-  box-shadow: var(--register-shadow);
+.saas-hero-text h1 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
 }
 
-.register-heading {
-  margin-bottom: 22px;
-}
-
-.register-heading > span,
-.register-section-heading > span {
-  color: var(--register-primary);
-}
-
-.register-heading h2 {
-  margin: 8px 0 6px;
-  color: var(--register-text);
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.register-heading p {
-  margin: 0;
-  color: var(--register-muted);
-  font-size: 0.98rem;
-  font-weight: 680;
+.saas-hero-text p {
+  font-size: 1.125rem;
+  color: #D1D5DB;
+  max-width: 400px;
   line-height: 1.6;
 }
 
-.register-form {
+.saas-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.saas-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: fit-content;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.feature-icon {
+  color: #818CF8;
+}
+
+/* Right Panel - Form */
+.saas-form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--saas-bg);
+}
+
+.mobile-crazy-header {
+  display: none; /* Hidden on desktop */
+}
+
+.saas-form-container {
+  width: 100%;
+  max-width: 440px;
+}
+
+.saas-form-header {
+  margin-bottom: 2.5rem;
+}
+
+.saas-form-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--saas-text-main);
+  margin-bottom: 0.5rem;
+}
+
+.saas-form-header p {
+  color: var(--saas-text-muted);
+  font-size: 1rem;
+}
+
+/* Inputs */
+.saas-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.saas-form-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
 }
 
-.register-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+.saas-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
-.register-field {
-  display: grid;
-  gap: 7px;
+.saas-input-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--saas-text-main);
 }
 
-.register-field--full {
-  grid-column: 1 / -1;
-}
-
-.register-field > span {
-  color: var(--register-text);
-  font-size: 0.88rem;
-  font-weight: 820;
-}
-
-.register-input-wrap {
+.saas-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.register-input-wrap > svg {
+.saas-input-icon {
   position: absolute;
-  left: 13px;
-  color: var(--register-primary);
-  pointer-events: none;
+  left: 14px;
+  color: #9CA3AF;
 }
 
-.register-field input {
+.saas-input-wrapper input {
   width: 100%;
-  min-height: 48px;
-  padding: 0 12px;
-  border: 1px solid var(--register-border);
+  height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--saas-border);
   border-radius: 8px;
-  color: var(--register-text);
-  background: var(--register-surface);
-  font: inherit;
-  font-size: 0.94rem;
-  font-weight: 650;
+  background-color: var(--saas-bg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--saas-text-main);
+  transition: all 0.2s ease;
+  box-shadow: var(--saas-shadow-sm);
+}
+
+.saas-input-wrapper input::placeholder {
+  color: #9CA3AF;
+}
+
+.saas-input-wrapper input:focus {
   outline: none;
+  border-color: var(--saas-primary);
+  box-shadow: 0 0 0 4px var(--saas-ring);
 }
 
-.register-input-wrap input {
-  padding-left: 42px;
-  padding-right: 44px;
-}
-
-.register-field input::placeholder {
-  color: var(--register-soft);
-}
-
-.register-field input:focus {
-  border-color: var(--register-primary);
-  box-shadow: 0 0 0 4px rgba(15, 107, 95, 0.13);
-}
-
-.register-icon-btn {
+.saas-eye-btn {
   position: absolute;
-  right: 8px;
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  color: var(--register-muted);
-  background: transparent;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #9CA3AF;
   cursor: pointer;
-}
-
-.register-icon-btn:hover {
-  color: var(--register-primary-dark);
-  background: var(--register-surface-soft);
-}
-
-.password-meter {
+  padding: 4px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  border-radius: 4px;
+  transition: color 0.2s;
 }
 
-.password-meter div {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  flex: 1;
+.saas-eye-btn:hover {
+  color: var(--saas-text-main);
+  background: var(--saas-surface);
 }
 
-.password-meter span {
-  height: 8px;
-  border-radius: 999px;
-  background: #e8edf0;
-}
+/* Password Strength */
+.saas-strength-meter { margin-top: -0.25rem; }
+.saas-strength-bars { display: flex; gap: 4px; height: 4px; margin-bottom: 6px; }
+.saas-strength-bars .bar { flex: 1; background-color: var(--saas-border); border-radius: 2px; transition: background-color 0.3s ease; }
+.saas-strength-meter[data-score="1"] .bar:nth-child(1) { background-color: var(--saas-danger); }
+.saas-strength-meter[data-score="2"] .bar:nth-child(-n+2) { background-color: var(--saas-warning); }
+.saas-strength-meter[data-score="3"] .bar { background-color: var(--saas-success); }
 
-.password-meter strong {
-  min-width: 58px;
-  color: var(--register-muted);
-  font-size: 0.82rem;
-  font-weight: 820;
-  text-align: right;
-}
-
-.password-meter[data-strength="1"] span:nth-child(1) {
-  background: #ef4444;
-}
-
-.password-meter[data-strength="2"] span:nth-child(-n + 2) {
-  background: #f59e0b;
-}
-
-.password-meter[data-strength="3"] span {
-  background: var(--register-primary);
-}
-
-.password-checks {
+.saas-strength-labels {
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--saas-text-muted);
+}
+
+.saas-password-requirements {
+  display: flex;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-top: -0.5rem;
 }
 
-.password-checks span {
-  min-height: 30px;
-  display: inline-flex;
+.saas-password-requirements span {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 9px;
-  border-radius: 999px;
-  color: var(--register-muted);
-  background: var(--register-surface-soft);
-  font-size: 0.78rem;
-  font-weight: 760;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #9CA3AF;
 }
 
-.password-checks span.is-valid {
-  color: #166534;
-  background: #dcfce7;
+.saas-password-requirements span.met {
+  color: var(--saas-success);
 }
 
-.register-address-section {
-  margin-top: 6px;
-  padding-top: 18px;
-  border-top: 1px solid var(--register-border);
-}
-
-.register-section-heading {
-  margin-bottom: 14px;
-}
-
-.register-section-heading h3 {
-  margin: 6px 0 0;
-  color: var(--register-text);
-  font-size: 1.2rem;
-  line-height: 1.25;
-}
-
-.register-terms {
+/* Checkbox */
+.saas-checkbox-container {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: var(--register-muted);
-  font-size: 0.9rem;
-  font-weight: 680;
+  margin: 0.5rem 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.saas-checkbox-container input { position: absolute; opacity: 0; height: 0; width: 0; }
+
+.saas-custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--saas-border);
+  border-radius: 4px;
+  background: var(--saas-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  transition: all 0.2s;
+  box-shadow: var(--saas-shadow-sm);
+}
+
+.saas-checkbox-container input:checked ~ .saas-custom-checkbox {
+  background-color: var(--saas-primary);
+  border-color: var(--saas-primary);
+}
+
+.saas-checkbox-container input:checked ~ .saas-custom-checkbox::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.saas-checkbox-label {
+  font-size: 0.875rem;
+  color: var(--saas-text-muted);
   line-height: 1.5;
 }
 
-.register-terms input {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  accent-color: var(--register-primary);
-}
+.saas-checkbox-label a { color: var(--saas-primary); text-decoration: none; font-weight: 500; }
+.saas-checkbox-label a:hover { text-decoration: underline; }
 
-.register-submit {
-  min-height: 50px;
-  display: inline-flex;
+/* Primary Button */
+.saas-primary-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  border: 0;
+  background-color: var(--saas-primary);
+  color: white;
+  border: none;
   border-radius: 8px;
-  color: #ffffff;
-  background: var(--register-primary);
-  font: inherit;
-  font-size: 0.96rem;
-  font-weight: 850;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--saas-shadow-md);
+  margin-top: 0.5rem;
 }
 
-.register-submit:hover:not(:disabled) {
-  background: var(--register-primary-dark);
+.saas-primary-btn:hover:not(:disabled) { background-color: var(--saas-primary-hover); transform: translateY(-1px); }
+.saas-primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.saas-spinner { animation: spin 1s linear infinite; }
+
+.saas-auth-footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.875rem;
+  color: var(--saas-text-muted);
 }
+.saas-auth-footer a { color: var(--saas-text-main); font-weight: 600; text-decoration: none; margin-left: 4px; }
 
-.register-submit:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+/* OTP Specifics */
+.saas-otp-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.saas-otp-input-group { display: flex; gap: 10px; justify-content: space-between; }
+.saas-otp-box {
+  width: 54px; height: 60px;
+  border: 1px solid var(--saas-border); border-radius: 10px;
+  font-size: 1.5rem; font-weight: 600; text-align: center;
+  color: var(--saas-text-main); background: var(--saas-bg);
+  box-shadow: var(--saas-shadow-sm); transition: all 0.2s;
 }
+.saas-otp-box:focus { outline: none; border-color: var(--saas-primary); box-shadow: 0 0 0 4px var(--saas-ring); }
+.saas-otp-box:disabled { background: var(--saas-surface); color: var(--saas-text-muted); }
+.saas-otp-timer { font-size: 0.875rem; color: var(--saas-text-muted); text-align: center; }
+.saas-otp-timer strong { color: var(--saas-text-main); }
+.saas-otp-timer.expired { color: var(--saas-danger); }
 
-.register-submit .lucide-loader-2 {
-  animation: register-spin 850ms linear infinite;
-}
+.saas-otp-actions { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 0.875rem; }
+.saas-otp-actions button { background: none; border: none; color: var(--saas-primary); font-weight: 500; cursor: pointer; }
+.saas-dot-divider { color: var(--saas-border); }
 
-.auth-switch {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  color: var(--register-muted);
-  font-size: 0.92rem;
-  font-weight: 700;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.auth-switch a {
-  color: var(--register-primary-dark);
-  font-weight: 850;
-  text-decoration: none;
-}
 
-.auth-switch a:hover {
-  text-decoration: underline;
-}
-
-.register-field input:focus-visible,
-.register-icon-btn:focus-visible,
-.register-terms input:focus-visible,
-.register-submit:focus-visible,
-.auth-switch a:focus-visible {
-  outline: 3px solid rgba(15, 107, 95, 0.25);
-  outline-offset: 3px;
-}
-
-@keyframes register-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 1040px) {
-  .register-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .register-brand-panel {
-    position: relative;
-    min-height: 360px;
-  }
-
-  .register-brand-content h1 {
-    font-size: 2.7rem;
-  }
-}
-
-@media (max-width: 720px) {
-  .register-form-section {
-    padding: 24px 16px 40px;
-  }
-
-  .register-brand-panel {
-    min-height: 320px;
-    padding: 28px 20px;
-  }
-
-  .register-brand-content h1 {
-    font-size: 2.25rem;
-  }
-
-  .register-form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .register-field,
-  .register-field--full {
-    grid-column: 1 / -1;
-  }
-
-  .register-card {
-    padding: 22px 16px;
-  }
-}
-
-@media (max-width: 460px) {
-  .register-brand-panel {
-    min-height: 280px;
-  }
-
-  .register-heading h2 {
-    font-size: 2rem;
-  }
-
-  .register-benefits div {
-    width: 100%;
-  }
-
-  .password-meter {
-    align-items: flex-start;
+/* =========================================
+   CRAZY MOBILE OVERRIDE
+   ========================================= */
+@media (max-width: 1024px) {
+  .saas-split-layout {
     flex-direction: column;
+    background-color: var(--saas-surface);
+  }
+  
+  .saas-visual-panel {
+    display: none; 
+  }
+  
+  .saas-form-panel {
+    padding: 0;
+    align-items: flex-start;
+    background: transparent;
   }
 
-  .password-meter strong {
-    text-align: left;
+  /* The Glowing Dark Mobile Header */
+  .mobile-crazy-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 4rem 1.5rem 5.5rem 1.5rem; /* Extra padding at bottom for overlap */
+    background: linear-gradient(135deg, #0f101f 0%, #312E81 100%);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
   }
+
+  /* Animated Floating Glow Orbs */
+  .mobile-crazy-header::before,
+  .mobile-crazy-header::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(45px);
+    z-index: 0;
+  }
+
+  .mobile-crazy-header::before {
+    width: 200px; 
+    height: 200px;
+    background: rgba(99, 102, 241, 0.45); /* Indigo glow */
+    top: -50px; 
+    left: -50px;
+    animation: float 8s ease-in-out infinite alternate;
+  }
+
+  .mobile-crazy-header::after {
+    width: 150px; 
+    height: 150px;
+    background: rgba(236, 72, 153, 0.35); /* Pink glow */
+    bottom: -20px; 
+    right: -20px;
+    animation: float 6s ease-in-out infinite alternate-reverse;
+  }
+
+  .mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    z-index: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-crazy-header p {
+    color: #C7D2FE;
+    z-index: 1;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  /* The Overlapping Form Card */
+  .saas-form-container {
+    background: var(--saas-bg);
+    border-radius: 32px 32px 0 0; /* Curves the top of the form */
+    padding: 2.5rem 1.5rem 4rem;
+    margin-top: -45px; /* Pulls the white form up over the dark header */
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.25);
+    max-width: 100%;
+    min-height: calc(100vh - 180px); /* Ensures it stretches to bottom */
+  }
+
+  .saas-form-header h2 {
+    font-size: 1.75rem;
+  }
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 30px) scale(1.1); }
+}
+
+@media (max-width: 480px) {
+  .saas-otp-box { width: 44px; height: 50px; font-size: 1.25rem; }
 }

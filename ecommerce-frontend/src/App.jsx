@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalListener from "./components/GlobalListener";
+import AiShoppingAssistant from "./components/AiShoppingAssistant";
 import "./App.css";
 
 const getInitialTheme = () => {
@@ -82,6 +83,8 @@ function App() {
 
       <Footer />
 
+      <AiShoppingAssistant />
+      
       <Toaster
         position="top-center"
         gutter={12}

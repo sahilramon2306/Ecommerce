@@ -27,6 +27,7 @@ import Blog from "../pages/Blog";
 import ContactUs from "../pages/ContactUs";
 import Accessibility from "../pages/Accessibility";
 import TermsOfService from "../pages/TermsOfService";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 import HelpCenter from "../pages/HelpCenter";
 import ShippingInfo from "../pages/ShippingInfo";
 import Returns from "../pages/Returns";
@@ -47,6 +48,7 @@ import OrdersAdmin from "../pages/admin/OrdersAdmin";
 import Reviews from "../pages/admin/Reviews";
 import Categories from "../pages/admin/Categories";
 import AdminUsers from "../pages/admin/AdminUsers";
+import ContactManagement from "../pages/admin/ContactManagement";
 
 /* ================= PROTECTION ================= */
 import ProtectedRoute from "./ProtectedRoute";
@@ -69,6 +71,7 @@ const AppRoutes = () => {
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/accessibility" element={<Accessibility />} />
       <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/help-center" element={<HelpCenter />} />
       <Route path="/shipping-info" element={<ShippingInfo />} />
       <Route path="/returns" element={<Returns />} />
@@ -149,6 +152,7 @@ const AppRoutes = () => {
         <Route path="reviews" element={<Reviews />} />
         <Route path="categories" element={<Categories />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="contact-messages" element={<ContactManagement />}/>
       </Route>
 
       {/* ================= 404 PAGE ================= */}

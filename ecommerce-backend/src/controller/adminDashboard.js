@@ -331,6 +331,221 @@ const orderStatusSummary = async (req, res) => {
 };
 
 
+//----------------------------------------------------------------------------------------------------------------
+// Sales By Category
+const salesByCategory = async (req, res) => {
+  try {
+    const year = Number(req.query.year) || new Date().getFullYear();
+
+    const data = await orderModel.aggregate([
+      {
+        $match: {
+          paymentStatus: { $in: ["paid", "captured"] },
+          createdAt: {
+            $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+            $lte: new Date(`${year}-12-31T23:59:59.999Z`)
+          }
+        }
+      },
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "product_dbs", 
+          localField: "items.productId",
+          foreignField: "_id",
+          as: "product"
+        }
+      },
+      { 
+        $unwind: { 
+          path: "$product", 
+          preserveNullAndEmptyArrays: true 
+        } 
+      },
+      {
+        $group: {
+          _id: "$product.category",
+          totalSold: { $sum: "$items.quantity" },
+          grossRevenue: {
+            $sum: { $multiply: ["$items.price", "$items.quantity"] }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "category_dbs", 
+          localField: "_id",
+          foreignField: "_id",
+          as: "categoryDetails"
+        }
+      },
+      { 
+        $unwind: { 
+          path: "$categoryDetails", 
+          preserveNullAndEmptyArrays: true 
+        } 
+      },
+      {
+        $project: {
+          _id: 0,
+          category: { $ifNull: ["$categoryDetails.name", "Unknown Category"] },
+          totalSold: 1,
+          grossRevenue: { $round: ["$grossRevenue", 2] }
+        }
+      },
+      { $sort: { grossRevenue: -1 } }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      year,
+      data
+    });
+
+  } catch (error) {
+    console.error("❌ salesByCategory error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+//----------------------------------------------------------------------------------------------------------------
+// Top Customers (Lifetime Value)
+const topCustomers = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+
+    const data = await orderModel.aggregate([
+      {
+        $match: {
+          paymentStatus: { $in: ["paid", "captured"] } // Only counts successful payments
+        }
+      },
+      {
+        $group: {
+          _id: "$userId", // Groups everything by the User's ID
+          totalOrders: { $sum: 1 },
+          lifetimeSpent: { $sum: "$totalAmount" } // Adds up their total spend
+        }
+      },
+      { $sort: { lifetimeSpent: -1 } }, // Sorts highest spenders to the top
+      { $limit: limit },
+      {
+        $lookup: {
+          // VERIFY: This string MUST exactly match the collection name inside your MongoDB database (e.g., 'users', 'user_dbs', 'Users')
+          from: "user_dbs", 
+          localField: "_id", // The userId we grouped by earlier
+          foreignField: "_id", // The _id field in the Users collection
+          as: "user"
+        }
+      },
+      { 
+        $unwind: { 
+          path: "$user", 
+          // CRITICAL: If the lookup fails, this prevents the array from wiping out the data
+          preserveNullAndEmptyArrays: true 
+        } 
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: "$_id",
+          // Fallbacks added so your frontend doesn't crash if the lookup fails
+          name: { $ifNull: ["$user.name", "Unknown User"] },
+          email: { $ifNull: ["$user.email", "Unknown Email"] },
+          totalOrders: 1,
+          lifetimeSpent: { $round: ["$lifetimeSpent", 2] }
+        }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+    console.error("❌ topCustomers error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+//----------------------------------------------------------------------------------------------------------------
+// User Growth By Month
+const userGrowthByMonth = async (req, res) => {
+  try {
+    const year = Number(req.query.year) || new Date().getFullYear();
+
+    const rawData = await userModel.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+            $lte: new Date(`${year}-12-31T23:59:59.999Z`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          newUsers: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const formattedData = monthNames.map((month, index) => {
+      const found = rawData.find(item => item._id === index + 1);
+      return {
+        month,
+        newUsers: found ? found.newUsers : 0
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      year,
+      data: formattedData
+    });
+
+  } catch (error) {
+    console.error("❌ userGrowthByMonth error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+//----------------------------------------------------------------------------------------------------------------
+// Recent Orders Feed
+const recentOrders = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+
+    const orders = await orderModel.find()
+      .sort({ createdAt: -1 }) // Sorts by newest first
+      .limit(limit)
+      // VERIFY: Ensure 'userId' exactly matches the field name in your order schema
+      .populate('userId', 'name email') 
+      .select('userId totalAmount orderStatus paymentStatus createdAt'); 
+
+    return res.status(200).json({
+      success: true,
+      limit,
+      data: orders
+    });
+
+  } catch (error) {
+    console.error("❌ recentOrders error:", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 
 
 
@@ -343,5 +558,9 @@ module.exports = {
   salesByMonth,
   topProducts,
   lowStockProducts,
-  orderStatusSummary
+  orderStatusSummary,
+  salesByCategory,
+  topCustomers,
+  userGrowthByMonth,
+  recentOrders
 };

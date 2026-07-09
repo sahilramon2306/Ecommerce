@@ -1,323 +1,353 @@
-/* verify-otp.css - Premium Responsive OTP Verification */
-
-:root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --success: #10b981;
-  --danger: #ef4444;
-  --text-dark: #111827;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --bg-light: #f9fafb;
-  --card-bg: #ffffff;
-  --radius: 16px;
-  --shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --font: 'Inter', sans-serif;
-}
-
-.verify-wrapper {
-  display: flex;
+/* ========================================
+   GLOBAL & LAYOUT
+   ======================================== */
+.auth-page {
   min-height: 100vh;
-  font-family: var(--font);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: slideUp 0.6s ease forwards;
-}
-
-.verify-wrapper.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Image Panel */
-.verify-image {
-  flex: 1;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(79, 70, 229, 0.8)),
-              url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff" points="0,1000 1000,0 1000,1000"/></svg>') center/cover;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.verify-image::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><circle fill="%23ffffff" opacity="0.1" cx="500" cy="500" r="400"/></svg>') center/contain;
-  animation: float 6s ease-in-out infinite;
-}
-
-.overlay {
-  text-align: center;
-  color: white;
-  z-index: 1;
+  background-color: #f8fafc;
   padding: 2rem;
-  max-width: 400px;
+  font-family: "Inter", sans-serif;
 }
 
-.overlay h2 {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 800;
-  margin-bottom: 1rem;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.overlay p {
-  font-size: 1.125rem;
-  opacity: 0.9;
-  line-height: 1.6;
-}
-
-/* Form Section */
-.verify-form-section {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: white;
-}
-
-.verify-card {
+.auth-container {
   width: 100%;
-  max-width: 400px;
-  padding: 2.5rem;
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  max-width: 1200px;
+  min-height: 700px;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  overflow: hidden;
+}
+
+/* ========================================
+   LEFT PANEL (DARK THEME)
+   ======================================== */
+.auth-left {
+  width: 45%;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  color: white;
+  padding: 3rem 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   position: relative;
   overflow: hidden;
 }
 
-.verify-card::before {
+/* Add a subtle background glow to match screenshot */
+.auth-left::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  bottom: -20%;
+  left: -10%;
+  width: 150%;
+  height: 50%;
+  background: radial-gradient(ellipse at bottom, rgba(56, 189, 248, 0.2), transparent 50%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.verify-card h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: var(--text-dark);
-}
-
-.error-box,
-.success-box {
-  padding: 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-.error-box {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.success-box {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* OTP Input - Special Styling */
-.otp-input {
+.auth-brand {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4rem;
+  z-index: 2;
 }
 
-.otp-input input {
-  width: 50px;
-  height: 50px;
-  text-align: center;
+.brand-logo {
+  background: white;
+  color: #1e1b4b;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-text {
   font-size: 1.25rem;
   font-weight: 600;
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  transition: var(--transition);
-  background: white;
 }
 
-.otp-input input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  outline: none;
+.hero-text {
+  margin-bottom: 3rem;
+  z-index: 2;
 }
 
-/* Floating Groups */
-.floating-group {
-  position: relative;
+.hero-text h1 {
+  font-size: 3rem;
+  line-height: 1.1;
+  font-weight: 700;
   margin-bottom: 1.5rem;
 }
 
-.floating-group input {
+.hero-text p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  max-width: 90%;
+}
+
+.feature-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 2;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+/* ========================================
+   RIGHT PANEL (FORM)
+   ======================================== */
+.auth-right {
+  width: 55%;
+  padding: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.form-wrapper {
+  max-width: 440px;
   width: 100%;
-  padding: 1rem 1rem 0.5rem;
-  border: none;
-  border-bottom: 2px solid var(--border);
-  background: transparent;
-  font-size: 1rem;
-  transition: var(--transition);
-  color: var(--text-dark);
+  text-align: center;
 }
 
-.floating-group input:focus {
-  outline: none;
-  border-bottom-color: var(--primary);
+.form-wrapper h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
 }
 
-.floating-group label {
+.subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 2.5rem;
+}
+
+.highlight-email {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* ========================================
+   OTP INPUTS (HIDDEN OVERLAY METHOD)
+   ======================================== */
+.otp-overlay-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  cursor: text;
+}
+
+.hidden-real-input {
   position: absolute;
-  top: 1rem;
+  top: 0;
   left: 0;
-  font-size: 1rem;
-  color: var(--text-muted);
-  pointer-events: none;
-  transition: var(--transition);
-}
-
-.floating-group input:focus + label,
-.floating-group input:not(:placeholder-shown) + label {
-  top: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--primary);
-}
-
-/* Buttons */
-.verify-card button[type="submit"] {
   width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  height: 100%;
+  opacity: 0; /* Completely invisible */
+  z-index: 10;
+  cursor: text;
+  /* Prevent blue highlight on mobile tap */
+  -webkit-tap-highlight-color: transparent; 
+}
+
+.fake-boxes-container {
+  display: flex;
+  gap: 12px;
+  /* Keep boxes under the invisible input */
+  position: relative; 
+  z-index: 1;
+}
+
+.fake-box {
+  width: 54px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.fake-box.active {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   ALERTS
+   ======================================== */
+.error-box {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.success-box {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+/* ========================================
+   BUTTONS & LINKS
+   ======================================== */
+.timer-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.verify-btn {
+  width: 100%;
+  height: 52px;
+  background: #4f46e5;
   color: white;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
-  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
 }
 
-.verify-card button[type="submit"]:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+.verify-btn:hover:not(:disabled) {
+  background: #4338ca;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
 }
 
-.verify-card button[type="submit"]:disabled {
+.verify-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-.resend-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  border-radius: 8px;
-  font-weight: 500;
+.action-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 3rem;
+}
+
+.dot {
+  color: #cbd5e1;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: var(--transition);
 }
 
-.resend-btn:hover {
-  background: var(--primary);
-  color: white;
+.link-btn:hover {
+  text-decoration: underline;
 }
 
-/* Divider */
-.divider {
-  position: relative;
-  text-align: center;
-  margin: 2rem 0;
-  color: var(--text-muted);
+.back-to-login {
+  color: #64748b;
+  font-size: 0.9rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
 }
 
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border);
-  z-index: 0;
+.back-to-login span {
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
 }
 
-.divider span {
-  background: white;
-  padding: 0 1rem;
-  z-index: 1;
-  font-size: 0.875rem;
+.back-to-login span:hover {
+  text-decoration: underline;
 }
 
-/* Animations */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1024px) {
+  .auth-left {
+    padding: 2.5rem;
+  }
+  .hero-text h1 {
+    font-size: 2.2rem;
+  }
+  .auth-right {
+    padding: 2rem;
+  }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-}
-
-/* Responsive */
 @media (max-width: 768px) {
-  .verify-wrapper {
+  .auth-page {
+    padding: 0;
+  }
+  .auth-container {
     flex-direction: column;
+    border-radius: 0;
+    min-height: 100vh;
   }
-
-  .verify-image,
-  .verify-form-section {
-    flex: none;
-    padding: 1rem;
+  .auth-left {
+    width: 100%;
+    padding: 2rem;
+    height: auto;
   }
-
-  .verify-image {
-    min-height: 30vh;
+  .hero-text h1 {
+    font-size: 1.8rem;
   }
-
-  .verify-card {
-    padding: 1.5rem;
+  .feature-badges {
+    display: none; /* Hide on mobile to save space */
   }
-
-  .otp-input {
-    gap: 0.25rem;
+  .auth-right {
+    width: 100%;
+    padding: 2rem;
+    align-items: flex-start;
   }
-
-  .otp-input input {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .verify-card {
-    padding: 1rem;
-    margin: 0 0.5rem;
-  }
-
-  .overlay h2 {
-    font-size: 1.5rem;
+  /* Updated for Hidden Input Overlay boxes */
+  .fake-box {
+    width: 45px;
+    height: 55px;
+    font-size: 1.25rem;
   }
 }

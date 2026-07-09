@@ -1,6 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken");
+const userModel = require("../model/user"); // Adjust path if needed
 
 passport.use(
   new GoogleStrategy(
@@ -11,17 +12,42 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const userPayload = {
-          id: profile.id,
-          name: profile.displayName,
-          email: profile.emails[0].value,
-        };
+        const email = profile.emails?.[0]?.value;
 
-        const token = jwt.sign(userPayload, process.env.JWT_SECRET, {
-          expiresIn: "7d",
+        if (!email) {
+          return done(new Error("Google account email not found"), null);
+        }
+
+        // Find existing user
+        let user = await userModel.findOne({ email });
+
+        // Create user if not exists
+        if (!user) {
+          user = await userModel.create({
+            name: profile.displayName,
+            email: email,
+            googleId: profile.id,
+            isVerified: true,
+          });
+        }
+
+        // IMPORTANT: Use MongoDB _id in JWT
+        const token = jwt.sign(
+          {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "7d",
+          }
+        );
+
+        return done(null, {
+          token,
+          user,
         });
-
-        return done(null, { token });
       } catch (error) {
         return done(error, null);
       }

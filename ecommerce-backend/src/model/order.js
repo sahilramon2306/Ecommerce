@@ -16,7 +16,7 @@ const orderItemSchema = new mongoose.Schema(
       min: 1
     },
     price: {
-      type: Number, // snapshot price
+      type: Number,
       required: true,
       min: 0
     }
@@ -44,7 +44,32 @@ const refundedItemSchema = new mongoose.Schema(
       required: true,
       min: 0
     },
+    refundId: {
+      type: String,
+      default: ""
+    },
     refundedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  { _id: false }
+);
+
+/* ======================
+   STATUS HISTORY SCHEMA
+====================== */
+const statusHistorySchema = new mongoose.Schema(
+  {
+    status: {
+      type: String,
+      required: true
+    },
+    note: {
+      type: String,
+      default: ""
+    },
+    changedAt: {
       type: Date,
       default: Date.now
     }
@@ -121,6 +146,12 @@ const orderSchema = new mongoose.Schema(
       min: 0
     },
 
+    refundAmount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
     /* ---------- PAYMENT ---------- */
     paymentType: {
       type: String,
@@ -154,30 +185,55 @@ const orderSchema = new mongoose.Schema(
         "placed",
         "confirmed",
         "shipped",
+        "out_for_delivery",
         "delivered",
         "cancelled",
         "returned"
       ],
-      default: "placed"
+      default: "placed",
+      index: true
     },
 
-    statusHistory: [
-      {
-        status: {
-          type: String,
-          required: true
-        },
-        changedAt: {
-          type: Date,
-          default: Date.now
+    statusHistory: {
+      type: [statusHistorySchema],
+      default: [
+        {
+          status: "placed",
+          note: "Order placed"
         }
-      }
-    ],
+      ]
+    },
 
+    /* ---------- CANCEL / RETURN ---------- */
+    cancelReason: {
+      type: String,
+      default: ""
+    },
+
+    cancelledAt: {
+      type: Date
+    },
+
+    returnReason: {
+      type: String,
+      default: ""
+    },
+
+    returnedAt: {
+      type: Date
+    },
+
+    /* ---------- REFUND ---------- */
     refundStatus: {
       type: String,
-      enum: ["not_requested", "requested", "processed"],
-      default: "not_requested"
+      enum: ["not_requested", "requested", "processing", "processed", "failed"],
+      default: "not_requested",
+      index: true
+    },
+
+    refundFailureReason: {
+      type: String,
+      default: ""
     },
 
     refundedAt: {
@@ -186,9 +242,9 @@ const orderSchema = new mongoose.Schema(
 
     /* ---------- INVOICE ---------- */
     invoiceId: {
-    type: String,
-    default: undefined
-  },
+      type: String,
+      default: undefined
+    },
 
     invoiceUrl: {
       type: String
@@ -217,5 +273,7 @@ const orderSchema = new mongoose.Schema(
 ====================== */
 orderSchema.index({ userId: 1 });
 orderSchema.index({ razorpayOrderId: 1 });
+orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ refundStatus: 1 });
 
 module.exports = mongoose.model("Order_db", orderSchema);

@@ -209,7 +209,7 @@ const Checkout = () => {
         address,
       });
 
-      const orderId = orderRes.data?.data?._id;
+     const orderId = orderRes.data?.order?._id;
 
       if (!orderId) {
         toast.error("Order could not be created");

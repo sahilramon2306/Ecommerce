@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
-const blacklistModel = require("../model/blacklist.js");
+const blacklistModel = require("../model/blacklist");
 const { getToken } = require("../utils/getToken");
-const userModel = require("../model/user.js");
+const userModel = require("../model/user");
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -10,19 +10,23 @@ const authMiddleware = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token",
+        message: "Token not provided",
       });
     }
 
     const blacklisted = await blacklistModel.findOne({ token });
+
     if (blacklisted) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token",
+        message: "Token has been revoked",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    console.log("Decoded JWT:", decoded);
+
     const user = await userModel.findById(decoded.id);
 
     if (!user) {
@@ -33,11 +37,15 @@ const authMiddleware = async (req, res, next) => {
     }
 
     req.user = user;
+
     next();
-  } catch (err) {
+  } catch (error) {
+    console.error("Auth Middleware Error:", error);
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token",
+      error: error.message,
     });
   }
 };

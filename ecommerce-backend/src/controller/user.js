@@ -1,4 +1,5 @@
 const userModel = require('../model/user.js');
+const RegistrationOtp = require("../model/registrationOtp.js");
 const productModel = require("../model/product.js");
 const { getToken } = require("../utils/getToken");
 const crypto = require("crypto");
@@ -17,44 +18,15 @@ const RefreshToken = require("../model/refreshToken");
 // User registration
 const registration = async (req, res) => {
   try {
-    console.log("▶️ Incoming request body:", req.body);
+    console.log("Incoming request body:", req.body);
 
-    // ❌ DO NOT accept role from client
-    const { name, email, phone, password, addresses } = req.body;
+    const { name, email, phone, password } = req.body;
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({
         success: false,
         message: "Name, email, phone and password are required."
       });
-    }
-
-    if (!Array.isArray(addresses) || addresses.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one address is required."
-      });
-    }
-
-    const requiredAddressFields = [
-      "postOffice",
-      "policeStation",
-      "pincode",
-      "state",
-      "district",
-      "city",
-      "addressLine"
-    ];
-
-    for (let addr of addresses) {
-      for (let field of requiredAddressFields) {
-        if (!addr[field]) {
-          return res.status(400).json({
-            success: false,
-            message: `Address field '${field}' is required.`
-          });
-        }
-      }
     }
 
     const existingUserEmail = await userModel.findOne({ email });
@@ -73,29 +45,181 @@ const registration = async (req, res) => {
       });
     }
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const hashedOTP = crypto
+      .createHash("sha256")
+      .update(otp)
+      .digest("hex");
+
     const hashedPassword = await passwordLib.getHashed(password);
 
-    const newUser = new userModel({
-      name,
-      email,
-      phone,
-      password: hashedPassword,
-      role: "customer", 
-      addresses
+    await RegistrationOtp.deleteMany({
+      $or: [{ email }, { phone }]
     });
 
-    await newUser.save();
+    await RegistrationOtp.create({
+      email,
+      phone,
+      registrationOTP: hashedOTP,
+      registrationOTPExpire: Date.now() + 10 * 60 * 1000,
+      userData: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        role: "customer"
+      }
+    });
 
-    return res.status(201).json({
+    await sendEmail({
+      to: email,
+      subject: "Verify Your Email - SahimonCart",
+      text: `Your SahimonCart registration OTP is ${otp}. It is valid for 10 minutes.`,
+      html: `
+        <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:30px;">
+          <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:14px;overflow:hidden;">
+            <div style="background:#0f172a;padding:30px;text-align:center;">
+              <h1 style="color:#ffffff;margin:0;">SahimonCart</h1>
+              <p style="color:#cbd5e1;">Email Verification</p>
+            </div>
+
+            <div style="padding:35px;">
+              <h2 style="color:#111827;">Verify Your Email</h2>
+              <p style="color:#4b5563;font-size:16px;">
+                Use the OTP below to complete your registration.
+              </p>
+
+              <div style="text-align:center;margin:30px 0;">
+                <div style="
+                  display:inline-block;
+                  background:#f1f5f9;
+                  border:2px dashed #0f172a;
+                  padding:18px 35px;
+                  border-radius:12px;
+                  letter-spacing:10px;
+                  font-size:34px;
+                  font-weight:bold;
+                  color:#0f172a;
+                ">
+                  ${otp}
+                </div>
+              </div>
+
+              <p style="color:#6b7280;">
+                This OTP is valid for <strong>10 minutes</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    return res.status(200).json({
       success: true,
-      message: `User ${name} registered successfully.`
+      message: `OTP sent to ${email}. Please verify to complete registration.`
     });
 
   } catch (err) {
-    console.error("❌ Registration error:", err);
+    console.error("Registration OTP error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+//--------------------------------------------------------------------------------------
+const verifyRegistrationOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP are required."
+      });
+    }
+
+    const pendingRegistration = await RegistrationOtp.findOne({
+      email,
+      registrationOTPExpire: { $gt: Date.now() }
+    });
+
+    if (!pendingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP."
+      });
+    }
+
+    if (pendingRegistration.attempts >= 5) {
+      await RegistrationOtp.deleteOne({ _id: pendingRegistration._id });
+
+      return res.status(400).json({
+        success: false,
+        message: "Too many failed attempts. Please register again."
+      });
+    }
+
+    const hashedOTP = crypto
+      .createHash("sha256")
+      .update(otp)
+      .digest("hex");
+
+    if (pendingRegistration.registrationOTP !== hashedOTP) {
+      pendingRegistration.attempts += 1;
+      await pendingRegistration.save();
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP."
+      });
+    }
+
+    const existingUserEmail = await userModel.findOne({
+      email: pendingRegistration.email
+    });
+
+    if (existingUserEmail) {
+      await RegistrationOtp.deleteOne({ _id: pendingRegistration._id });
+
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists. Try another email."
+      });
+    }
+
+    const existingUserPhone = await userModel.findOne({
+      phone: pendingRegistration.phone
+    });
+
+    if (existingUserPhone) {
+      await RegistrationOtp.deleteOne({ _id: pendingRegistration._id });
+
+      return res.status(400).json({
+        success: false,
+        message: "Phone number already exists. Try another number."
+      });
+    }
+
+    const newUser = new userModel(pendingRegistration.userData);
+    await newUser.save();
+
+    await RegistrationOtp.deleteOne({ _id: pendingRegistration._id });
+
+    return res.status(201).json({
+      success: true,
+      message: `User ${newUser.name} registered successfully.`
+    });
+
+  } catch (err) {
+    console.error("Verify registration OTP error:", err);
 
     if (err.code === 11000) {
       const duplicateField = Object.keys(err.keyValue)[0];
+
       return res.status(400).json({
         success: false,
         message: `${duplicateField} already exists. Try another ${duplicateField}.`
@@ -752,6 +876,9 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    // =========================
+    // VALIDATION
+    // =========================
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -759,6 +886,9 @@ const forgotPassword = async (req, res) => {
       });
     }
 
+    // =========================
+    // FIND USER
+    // =========================
     const user = await userModel.findOne({ email });
 
     if (!user) {
@@ -768,28 +898,188 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // 🔐 Generate 6-digit OTP
+    // =========================
+    // GENERATE 6 DIGIT OTP
+    // =========================
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 🔐 Hash OTP
+    // =========================
+    // HASH OTP
+    // =========================
     const hashedOTP = crypto
       .createHash("sha256")
       .update(otp)
       .digest("hex");
 
-    // 🔐 Save hashed OTP & expiry
+    // =========================
+    // SAVE OTP & EXPIRY
+    // =========================
     user.resetPasswordOTP = hashedOTP;
-    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
 
     await user.save();
 
-    // 📧 Send OTP
+    // =========================
+    // SEND PREMIUM EMAIL
+    // =========================
     await sendEmail({
       to: user.email,
-      subject: "Password Reset OTP",
-      text: `Your password reset OTP is ${otp}. It is valid for 10 minutes.`
+      subject: "Reset Your Password - SahimonCart",
+
+      html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Password Reset OTP</title>
+      </head>
+
+      <body style="
+        margin:0;
+        padding:0;
+        background:#f4f7fb;
+        font-family:Arial,sans-serif;
+      ">
+
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center" style="padding:40px 15px;">
+
+              <table width="600" cellpadding="0" cellspacing="0" style="
+                background:#ffffff;
+                border-radius:18px;
+                overflow:hidden;
+                box-shadow:0 10px 30px rgba(0,0,0,0.08);
+              ">
+
+                <!-- HEADER -->
+                <tr>
+                  <td style="
+                    background:linear-gradient(135deg,#0f172a,#1e293b);
+                    padding:35px;
+                    text-align:center;
+                  ">
+
+                    <h1 style="
+                      color:#ffffff;
+                      margin:0;
+                      font-size:32px;
+                      letter-spacing:1px;
+                    ">
+                      SahimonCart
+                    </h1>
+
+                    <p style="
+                      color:#cbd5e1;
+                      margin-top:10px;
+                      font-size:15px;
+                    ">
+                      Secure Password Reset Verification
+                    </p>
+
+                  </td>
+                </tr>
+
+                <!-- CONTENT -->
+                <tr>
+                  <td style="padding:45px 40px;">
+
+                    <h2 style="
+                      margin:0 0 15px;
+                      color:#111827;
+                      font-size:26px;
+                    ">
+                      Reset Your Password
+                    </h2>
+
+                    <p style="
+                      color:#4b5563;
+                      font-size:16px;
+                      line-height:28px;
+                      margin-bottom:30px;
+                    ">
+                      We received a request to reset your password.
+                      Use the OTP below to continue securely.
+                    </p>
+
+                    <!-- OTP BOX -->
+                    <div style="
+                      text-align:center;
+                      margin:35px 0;
+                    ">
+
+                      <div style="
+                        display:inline-block;
+                        background:#f1f5f9;
+                        border:2px dashed #0f172a;
+                        padding:22px 45px;
+                        border-radius:16px;
+                        letter-spacing:12px;
+                        font-size:38px;
+                        font-weight:bold;
+                        color:#0f172a;
+                      ">
+                        ${otp}
+                      </div>
+
+                    </div>
+
+                    <p style="
+                      color:#6b7280;
+                      font-size:15px;
+                      line-height:26px;
+                    ">
+                      This OTP is valid for
+                      <strong>10 minutes</strong>.
+                    </p>
+
+                    <p style="
+                      color:#6b7280;
+                      font-size:15px;
+                      line-height:26px;
+                    ">
+                      If you did not request a password reset,
+                      you can safely ignore this email.
+                    </p>
+
+                  </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                  <td style="
+                    background:#f8fafc;
+                    padding:25px;
+                    text-align:center;
+                    border-top:1px solid #e5e7eb;
+                  ">
+
+                    <p style="
+                      margin:0;
+                      color:#94a3b8;
+                      font-size:13px;
+                    ">
+                      © 2026 SahimonCart. All rights reserved.
+                    </p>
+
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+      </html>
+      `
     });
 
+    // =========================
+    // RESPONSE
+    // =========================
     return res.status(200).json({
       success: true,
       message: `OTP sent to registered email ${email}`
@@ -797,12 +1087,15 @@ const forgotPassword = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Forgot password error:", err);
+
     return res.status(500).json({
       success: false,
       message: "Internal Server Error"
     });
   }
 };
+
+
 
 //------------------------------------------------------------------------------------------------------
 // Verify Reset OTP
@@ -1231,6 +1524,7 @@ const getPublicSiteStats = async (req, res) => {
 //=========================================================================================================
 module.exports = {
   registration: registration,
+  verifyRegistrationOTP: verifyRegistrationOTP,
   login: login,
   logout: logout,
   getUserProfile: getUserProfile,

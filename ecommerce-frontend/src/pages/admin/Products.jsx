@@ -6,13 +6,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
-  Image as ImageIcon,
   Loader2,
   PackageSearch,
   Plus,
   RefreshCw,
   Search,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   Upload,
   X,
@@ -27,6 +27,7 @@ import {
   updateProduct,
   uploadProductImages,
   getAllCategoriesAdmin,
+  generateProductContentAdmin,
 } from "../../api/adminApi";
 import "../../styles/admin-product.css";
 
@@ -119,6 +120,8 @@ const Products = () => {
   const [searchChildCategory, setSearchChildCategory] = useState("");
 
   const [formData, setFormData] = useState(initialForm);
+  const [aiFeatures, setAiFeatures] = useState("");
+  const [aiContent, setAiContent] = useState(null);
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [errors, setErrors] = useState({});
@@ -237,6 +240,49 @@ const Products = () => {
     loadProducts(currentPage, { quiet: !loading });
   }, [currentPage, debouncedSearch, sortBy, order, statusFilter]);
 
+  const getCategoryNameById = (id) => {
+    return allCategories.find((category) => String(category._id) === String(id))?.name || "";
+  };
+
+  const handleGenerateProductContent = async () => {
+    if (!formData.name.trim() || !formData.brand.trim()) {
+      toast.error("Enter product name and brand first");
+      return;
+    }
+
+    try {
+      setActionLoading("ai-content");
+
+      const res = await generateProductContentAdmin({
+        name: formData.name,
+        brand: formData.brand,
+        price: formData.price,
+        salePrice: formData.salePrice,
+        categoryName: getCategoryNameById(formData.category),
+        subCategoryName: getCategoryNameById(formData.subCategory),
+        childCategoryName: getCategoryNameById(formData.childCategory),
+        features: aiFeatures,
+      });
+
+      const data = res.data?.data;
+
+      if (res.data.success && data) {
+        setAiContent(data);
+
+        setFormData((current) => ({
+          ...current,
+          description: data.description || current.description,
+        }));
+
+        toast.success("AI content generated");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "AI generation failed");
+    } finally {
+      setActionLoading("");
+    }
+  };
+
   const syncCategoryOptions = (categoryId, subCategoryId = "") => {
     const subs = allCategories.filter((category) => String(getParentId(category)) === String(categoryId));
     setSubCategories(subs);
@@ -327,6 +373,8 @@ const Products = () => {
     setShowModal(false);
     setEditingProduct(null);
     setFormData(initialForm);
+    setAiFeatures("");
+    setAiContent(null);
     setImages([]);
     setPreviewImages([]);
     setErrors({});
@@ -384,6 +432,8 @@ const Products = () => {
     const childCategoryId = product.childCategory?._id || product.childCategory || "";
 
     setEditingProduct(product);
+    setAiFeatures("");
+    setAiContent(null);
     setFormData({
       name: product.name || "",
       description: product.description || "",
@@ -848,6 +898,61 @@ const Products = () => {
                 <FormField label="Stock Quantity" error={errors.stock}>
                   <input type="number" name="stock" value={formData.stock} onChange={handleChange} required min="0" />
                 </FormField>
+              </div>
+
+              <div className="ai-product-generator">
+                <div className="ai-product-generator-header">
+                  <span>AI Content Generator</span>
+                  <p>Generate description, highlights, SEO title, and meta description.</p>
+                </div>
+
+                <textarea
+                  value={aiFeatures}
+                  onChange={(event) => setAiFeatures(event.target.value)}
+                  placeholder="Example: genuine leather, RFID blocking, slim design, multiple card slots"
+                  rows="3"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleGenerateProductContent}
+                  disabled={actionLoading === "ai-content"}
+                >
+                  {actionLoading === "ai-content" ? (
+                    <>
+                      <Loader2 size={16} aria-hidden="true" />
+                      Generating
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={16} aria-hidden="true" />
+                      Generate with AI
+                    </>
+                  )}
+                </button>
+
+                {aiContent && (
+                  <div className="ai-generated-preview">
+                    <div>
+                      <strong>Short Highlights</strong>
+                      <ul>
+                        {(aiContent.shortHighlights || []).map((highlight, index) => (
+                          <li key={`${highlight}-${index}`}>{highlight}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <strong>SEO Title</strong>
+                      <p>{aiContent.seoTitle}</p>
+                    </div>
+
+                    <div>
+                      <strong>Meta Description</strong>
+                      <p>{aiContent.metaDescription}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <FormField label="Description" error={errors.description}>

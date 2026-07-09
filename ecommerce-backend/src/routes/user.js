@@ -5,6 +5,7 @@ const adminMiddleware = require("../middleware/adminMiddleware.js");
 // set Routes for User
 const setRouter = (app) => {
     app.post("/registration", userController.registration);
+    app.post("/verify-Registration-OTP", userController.verifyRegistrationOTP);
     app.post("/user-login", userController.login);
     app.post("/user-logout", authMiddleware, userController.logout);
     app.get("/get-User-Profile", authMiddleware, userController.getUserProfile);

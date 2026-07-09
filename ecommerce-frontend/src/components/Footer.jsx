@@ -95,7 +95,7 @@ const Footer = () => {
             <a href="https://www.facebook.com/" aria-label="Facebook" className="social-link">
               <FaFacebookF />
             </a>
-            <a href="https://www.instagram.com/" aria-label="Instagram" className="social-link">
+            <a href="https://www.instagram.com/sahimoncart/" aria-label="Instagram" className="social-link">
               <FaInstagram />
             </a>
             <a href="https://twitter.com/" aria-label="Twitter" className="social-link">
@@ -166,12 +166,13 @@ const Footer = () => {
       <div className="footer-bottom">
         <div className="bottom-content">
           <p className="copyright">
-            © {currentYear} SahimonCart. All rights reserved.
+            &copy; {currentYear} SahimonCart. All rights reserved.
           </p>
 
           <div className="bottom-links">
             <Link to="/terms-of-service">Terms of Service</Link>
             <Link to="/accessibility">Accessibility</Link>
+            <Link to="/privacy-policy">Privacy policy</Link>
           </div>
         </div>
       </div>

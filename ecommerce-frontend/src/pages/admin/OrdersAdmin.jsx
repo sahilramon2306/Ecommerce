@@ -1,780 +1,693 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
-  ArrowDownToLine,
-  ChevronLeft,
-  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
   CreditCard,
   Eye,
-  FileText,
   Loader2,
-  PackageCheck,
-  PackageSearch,
+  Package,
   RefreshCw,
   RotateCcw,
   Search,
-  ShoppingBag,
   Truck,
-  X,
+  X
 } from "lucide-react";
-import {
-  getAllOrdersAdmin,
-  getOrderByIdAdmin,
-  updateOrderStatusAdmin,
-  updatePaymentStatusAdmin,
-  getOrderInvoiceAdmin,
-  refundRazorpayPayment,
-} from "../../api/adminApi";
+import axiosInstance from "../../api/axiosInstance";
 import "../../styles/admin-orders.css";
 
-const PAGE_LIMIT = 10;
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
 
-const ORDER_STATUS_OPTIONS = [
-  { value: "", label: "All order status" },
-  { value: "placed", label: "Placed" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "returned", label: "Returned" },
+const orderStatusOptions = [
+  "placed",
+  "confirmed",
+  "shipped",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "returned"
 ];
 
-const PAYMENT_STATUS_OPTIONS = [
-  { value: "", label: "All payment status" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-  { value: "captured", label: "Captured" },
-  { value: "failed", label: "Failed" },
-  { value: "refunded", label: "Refunded" },
+const paymentStatusOptions = [
+  "pending",
+  "authorized",
+  "captured",
+  "failed",
+  "refunded"
 ];
 
-const PAYMENT_TYPE_OPTIONS = [
-  { value: "", label: "All payment type" },
-  { value: "COD", label: "COD" },
-  { value: "ONLINE", label: "Online" },
+const refundStatusOptions = [
+  "all",
+  "not_requested",
+  "requested",
+  "processing",
+  "processed",
+  "failed"
 ];
 
-const NEXT_ORDER_STATUSES = ["confirmed", "shipped", "delivered", "cancelled", "returned"];
-const NEXT_PAYMENT_STATUSES = ["paid", "captured", "failed", "refunded"];
+const orderStatusLabels = {
+  placed: "Placed",
+  confirmed: "Confirmed",
+  shipped: "Shipped",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned"
+};
 
-const formatPrice = (value) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+const paymentStatusLabels = {
+  pending: "Pending",
+  authorized: "Authorized",
+  captured: "Captured",
+  failed: "Failed",
+  refunded: "Refunded"
+};
 
-const formatDate = (value, withTime = false) => {
-  if (!value) return "Unavailable";
+const refundStatusLabels = {
+  not_requested: "Not Requested",
+  requested: "Refund Requested",
+  processing: "Processing",
+  processed: "Refunded",
+  failed: "Failed"
+};
+
+const getOrderId = (order) => order?._id || order?.id;
+
+const formatPrice = (value) => {
+  const amount = Number(value || 0);
+  return `Rs. ${amount.toLocaleString("en-IN")}`;
+};
+
+const formatDate = (value) => {
+  if (!value) return "N/A";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unavailable";
+  if (Number.isNaN(date.getTime())) return "N/A";
 
   return date.toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+    hour: "2-digit",
+    minute: "2-digit"
   });
 };
 
-const normalizeArray = (value) => (Array.isArray(value) ? value : []);
-
-const getStatusKey = (value, fallback = "pending") =>
-  String(value || fallback)
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
-
-const formatLabel = (value, fallback = "Pending") =>
-  String(value || fallback)
-    .replace(/[_-]/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-
-const getCustomerName = (order) => order?.userId?.name || order?.user?.name || "Guest";
-
-const getCustomerEmail = (order) => order?.userId?.email || order?.user?.email || "N/A";
-
-const getOrderTotal = (order) => {
-  const total = Number(order?.totalAmount || order?.grandTotal);
-  if (Number.isFinite(total)) return total;
-
-  return normalizeArray(order?.items).reduce((sum, item) => {
-    return sum + Number(item.price || 0) * Number(item.quantity || 0);
-  }, 0);
+const getAssetUrl = (path) => {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${BACKEND_URL}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
-const getShippingAddress = (order) => {
-  const address = order?.shippingAddress || order?.address || {};
+const getProduct = (item) => {
+  if (item?.productId && typeof item.productId === "object") {
+    return item.productId;
+  }
 
-  return [
-    address.name,
-    address.phone,
-    address.addressLine || address.street,
-    address.city,
-    address.district,
-    address.state,
-    address.pincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  return {};
+};
+
+const getProductId = (item) => {
+  if (item?.productId && typeof item.productId === "object") {
+    return item.productId._id;
+  }
+
+  return item?.productId;
+};
+
+const getProductImage = (product) => {
+  const image = product?.images?.[0];
+  return getAssetUrl(image);
+};
+
+const getInitial = (name = "P") => {
+  return String(name).trim().charAt(0).toUpperCase() || "P";
+};
+
+const normalizeOrders = (payload) => {
+  const data =
+    payload?.orders ||
+    payload?.data?.orders ||
+    payload?.data ||
+    payload?.orderList ||
+    payload;
+
+  return Array.isArray(data) ? data : [];
+};
+
+const adminOrderApi = {
+  getAllOrders: () => axiosInstance.get("/get-All-Orders-Admin"),
+
+  updateOrderStatus: (orderId, orderStatus) => {
+    return axiosInstance.put(`/update-Order-Status-Admin/${orderId}`, {
+      orderStatus,
+      status: orderStatus
+    });
+  },
+
+  updatePaymentStatus: (orderId, paymentStatus) => {
+    return axiosInstance.put(`/update-Payment-Status-Admin/${orderId}`, {
+      paymentStatus,
+      status: paymentStatus
+    });
+  },
+
+  processRefund: (orderId) => {
+    return axiosInstance.post(`/refund-Razorpay-Payment/${orderId}`);
+  }
+};
+
+const ProductImage = ({ product }) => {
+  const [broken, setBroken] = useState(false);
+  const name = product?.name || "Product";
+  const image = getProductImage(product);
+
+  if (!image || broken) {
+    return <div className="admin-order-product-fallback">{getInitial(name)}</div>;
+  }
+
+  return (
+    <img
+      src={image}
+      alt={name}
+      className="admin-order-product-image"
+      onError={() => setBroken(true)}
+    />
+  );
 };
 
 const OrdersAdmin = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tableLoading, setTableLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalOrders, setTotalOrders] = useState(0);
-
-  const [searchOrderId, setSearchOrderId] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [orderStatusFilter, setOrderStatusFilter] = useState("");
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
-  const [paymentTypeFilter, setPaymentTypeFilter] = useState("");
-
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [refundFilter, setRefundFilter] = useState("all");
+  const [actionLoading, setActionLoading] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    type: "",
-    id: "",
-    status: "",
-  });
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
 
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "success",
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchOrderId.trim());
-      setCurrentPage(1);
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [searchOrderId]);
-
-  const showToast = (message, type = "success") => {
-    setToast({ show: true, message, type });
-
-    window.setTimeout(() => {
-      setToast({ show: false, message: "", type: "success" });
-    }, 3000);
-  };
-
-  const loadOrders = useCallback(
-    async (page = currentPage, { quiet = false } = {}) => {
-      try {
-        if (quiet) setTableLoading(true);
-        else setLoading(true);
-
-        setErrorMessage("");
-
-        const res = await getAllOrdersAdmin({
-          page,
-          limit: PAGE_LIMIT,
-          orderId: debouncedSearch,
-          orderStatus: orderStatusFilter,
-          paymentStatus: paymentStatusFilter,
-          paymentType: paymentTypeFilter,
-        });
-
-        const pagination = res.data?.pagination || res.data?.meta || {};
-
-        setOrders(normalizeArray(res.data?.data));
-        setTotalPages(pagination.totalPages || 1);
-        setTotalOrders(pagination.totalOrders || pagination.total || 0);
-        setCurrentPage(pagination.currentPage || page);
-      } catch (err) {
-        console.error("Load orders error:", err);
-        setOrders([]);
-        setErrorMessage("Failed to load orders.");
-      } finally {
-        setLoading(false);
-        setTableLoading(false);
-      }
-    },
-    [currentPage, debouncedSearch, orderStatusFilter, paymentStatusFilter, paymentTypeFilter]
-  );
+      const response = await adminOrderApi.getAllOrders();
+      setOrders(normalizeOrders(response.data));
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Failed to load admin orders");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    loadOrders(currentPage, { quiet: !loading });
-  }, [currentPage, debouncedSearch, orderStatusFilter, paymentStatusFilter, paymentTypeFilter]);
+    fetchOrders();
+  }, [fetchOrders]);
 
   const stats = useMemo(() => {
-    const pending = orders.filter(
-      (order) => getStatusKey(order.orderStatus, "placed") === "placed"
+    const total = orders.length;
+    const refundRequested = orders.filter(
+      (order) => order.refundStatus === "requested"
     ).length;
-
-    const shipped = orders.filter(
-      (order) => getStatusKey(order.orderStatus) === "shipped"
+    const delivered = orders.filter((order) => order.orderStatus === "delivered").length;
+    const cancelledReturned = orders.filter((order) =>
+      ["cancelled", "returned"].includes(order.orderStatus)
     ).length;
-
-    const paid = orders.filter((order) =>
-      ["paid", "captured"].includes(getStatusKey(order.paymentStatus))
-    ).length;
-
-    const revenue = orders.reduce((sum, order) => sum + getOrderTotal(order), 0);
 
     return {
-      visible: orders.length,
-      pending,
-      shipped,
-      paid,
-      revenue,
+      total,
+      refundRequested,
+      delivered,
+      cancelledReturned
     };
   }, [orders]);
 
-  const resetFilters = () => {
-    setSearchOrderId("");
-    setDebouncedSearch("");
-    setOrderStatusFilter("");
-    setPaymentStatusFilter("");
-    setPaymentTypeFilter("");
-    setCurrentPage(1);
+  const filteredOrders = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+
+    return [...orders]
+      .filter((order) => {
+        const orderId = String(getOrderId(order) || "").toLowerCase();
+        const customerName = String(order.address?.name || "").toLowerCase();
+        const customerPhone = String(order.address?.phone || "").toLowerCase();
+        const customerCity = String(order.address?.city || "").toLowerCase();
+
+        const matchesSearch =
+          !query ||
+          orderId.includes(query) ||
+          customerName.includes(query) ||
+          customerPhone.includes(query) ||
+          customerCity.includes(query);
+
+        const matchesStatus =
+          statusFilter === "all" || order.orderStatus === statusFilter;
+
+        const matchesRefund =
+          refundFilter === "all" ||
+          (order.refundStatus || "not_requested") === refundFilter;
+
+        return matchesSearch && matchesStatus && matchesRefund;
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [orders, searchText, statusFilter, refundFilter]);
+
+  const canProcessRefund = (order) => {
+    return (
+      order.paymentType === "ONLINE" &&
+      order.paymentStatus === "captured" &&
+      ["requested", "failed"].includes(order.refundStatus) &&
+      ["cancelled", "returned"].includes(order.orderStatus)
+    );
   };
 
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    setDebouncedSearch(searchOrderId.trim());
-    setCurrentPage(1);
-  };
+  const handleOrderStatusChange = async (order, nextStatus) => {
+    const orderId = getOrderId(order);
 
-  const updateFilter = (setter) => (event) => {
-    setter(event.target.value);
-    setCurrentPage(1);
-  };
+    if (!orderId || nextStatus === order.orderStatus) return;
 
-  const promptStatusChange = (type, id, status) => {
-    if (!status) return;
+    const confirmed = window.confirm(
+      `Update order status to ${orderStatusLabels[nextStatus] || nextStatus}?`
+    );
 
-    setConfirmDialog({
-      isOpen: true,
-      type,
-      id,
-      status,
-    });
-  };
-
-  const cancelStatusChange = () => {
-    setConfirmDialog({ isOpen: false, type: "", id: "", status: "" });
-  };
-
-  const executeStatusChange = async () => {
-    const { type, id, status } = confirmDialog;
-
-    try {
-      setActionLoading("status");
-
-      if (type === "order") {
-        await updateOrderStatusAdmin(id, { orderStatus: status });
-      } else {
-        await updatePaymentStatusAdmin(id, { paymentStatus: status });
-      }
-
-      showToast(`${formatLabel(type)} status updated to ${formatLabel(status)}`);
-      cancelStatusChange();
-      loadOrders(currentPage, { quiet: true });
-    } catch (err) {
-      console.error("Status update error:", err);
-      showToast(`Failed to update ${type} status`, "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const viewOrder = async (id) => {
-    try {
-      setActionLoading(`view-${id}`);
-
-      const res = await getOrderByIdAdmin(id);
-
-      setSelectedOrder(res.data?.data || null);
-      setShowModal(true);
-    } catch (err) {
-      console.error("View order error:", err);
-      showToast("Failed to load order details", "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const downloadInvoice = async (id) => {
-    try {
-      setActionLoading(`invoice-${id}`);
-
-      const res = await getOrderInvoiceAdmin(id);
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.download = `invoice_${id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      showToast("Invoice downloaded");
-    } catch (err) {
-      console.error("Invoice error:", err);
-      showToast("Failed to download invoice", "error");
-    } finally {
-      setActionLoading("");
-    }
-  };
-
-  const refundOrder = async (id) => {
-    const confirmed = window.confirm("Refund this Razorpay payment?");
     if (!confirmed) return;
 
     try {
-      setActionLoading(`refund-${id}`);
+      setActionLoading(`order-${orderId}`);
+      const response = await adminOrderApi.updateOrderStatus(orderId, nextStatus);
 
-      await refundRazorpayPayment(id);
-      showToast("Refund initiated");
-      loadOrders(currentPage, { quiet: true });
-    } catch (err) {
-      console.error("Refund error:", err);
-      showToast(err.response?.data?.message || "Refund failed", "error");
+      alert(response.data?.message || "Order status updated successfully");
+      await fetchOrders();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update order status");
     } finally {
       setActionLoading("");
     }
   };
 
-  if (loading && orders.length === 0) {
-    return (
-      <main className="admin-orders">
-        <StateCard
-          icon={Loader2}
-          title="Loading orders"
-          message="Fetching order, payment, and customer details."
-          loading
-        />
-      </main>
-    );
-  }
+  const handlePaymentStatusChange = async (order, nextStatus) => {
+    const orderId = getOrderId(order);
 
-  if (errorMessage) {
+    if (!orderId || nextStatus === order.paymentStatus) return;
+
+    const confirmed = window.confirm(
+      `Update payment status to ${paymentStatusLabels[nextStatus] || nextStatus}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(`payment-${orderId}`);
+      const response = await adminOrderApi.updatePaymentStatus(orderId, nextStatus);
+
+      alert(response.data?.message || "Payment status updated successfully");
+      await fetchOrders();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update payment status");
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const handleProcessRefund = async (order) => {
+    const orderId = getOrderId(order);
+
+    if (!orderId) return;
+
+    const amount = Number(order.refundAmount || order.totalAmount || 0);
+    const confirmed = window.confirm(
+      `Process refund of ${formatPrice(amount)} for this order?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(`refund-${orderId}`);
+      const response = await adminOrderApi.processRefund(orderId);
+
+      alert(response.data?.message || "Refund processed successfully");
+      await fetchOrders();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to process refund");
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  if (loading) {
     return (
-      <main className="admin-orders">
-        <StateCard
-          icon={PackageSearch}
-          title="Orders unavailable"
-          message={errorMessage}
-          actionLabel="Try again"
-          onAction={() => loadOrders(currentPage)}
-        />
+      <main className="admin-orders-page">
+        <section className="admin-orders-shell">
+          <div className="admin-orders-loading">
+            <Loader2 size={34} />
+            <p>Loading orders...</p>
+          </div>
+        </section>
       </main>
     );
   }
 
   return (
-    <main className="admin-orders">
-      <header className="admin-orders-header">
-        <div>
-          <span className="admin-orders-kicker">
-            <PackageCheck size={16} aria-hidden="true" />
-            Order operations
-          </span>
-          <h1>Orders Management</h1>
-          <p>Track order progress, payment state, invoices, and customer fulfillment details.</p>
-        </div>
+    <main className="admin-orders-page">
+      <section className="admin-orders-shell">
+        <div className="admin-orders-header">
+          <div>
+            <p>Order Management</p>
+            <h1>Orders</h1>
+            <span>Manage order status, payment status, refunds, and customer details.</span>
+          </div>
 
-        <button
-          type="button"
-          className="admin-orders-secondary-btn"
-          onClick={() => loadOrders(currentPage, { quiet: true })}
-          disabled={tableLoading}
-        >
-          {tableLoading ? (
-            <Loader2 size={16} aria-hidden="true" />
-          ) : (
-            <RefreshCw size={16} aria-hidden="true" />
-          )}
-          Refresh
-        </button>
-      </header>
-
-      {toast.show && (
-        <div className={`premium-toast toast-${toast.type}`} role="status">
-          {toast.type === "success" ? "Success" : "Alert"}: {toast.message}
-        </div>
-      )}
-
-      <section className="orders-admin-stats" aria-label="Order summary">
-        <div>
-          <span>Visible orders</span>
-          <strong>{stats.visible}</strong>
-        </div>
-        <div>
-          <span>Total orders</span>
-          <strong>{totalOrders || stats.visible}</strong>
-        </div>
-        <div>
-          <span>Placed</span>
-          <strong>{stats.pending}</strong>
-        </div>
-        <div>
-          <span>Shipped</span>
-          <strong>{stats.shipped}</strong>
-        </div>
-        <div>
-          <span>Paid</span>
-          <strong>{stats.paid}</strong>
-        </div>
-        <div>
-          <span>Visible revenue</span>
-          <strong>{formatPrice(stats.revenue)}</strong>
-        </div>
-      </section>
-
-      <section className="orders-filters-container" aria-label="Order filters">
-        <form onSubmit={handleSearchSubmit} className="search-bar">
-          <Search size={19} aria-hidden="true" />
-          <input
-            type="search"
-            placeholder="Search exact order ID..."
-            value={searchOrderId}
-            onChange={(event) => setSearchOrderId(event.target.value)}
-          />
-          {searchOrderId && (
-            <button
-              type="button"
-              className="search-clear"
-              onClick={() => setSearchOrderId("")}
-              aria-label="Clear search"
-            >
-              <X size={17} aria-hidden="true" />
-            </button>
-          )}
-          <button type="submit">Search</button>
-        </form>
-
-        <div className="orders-filters">
-          <select value={orderStatusFilter} onChange={updateFilter(setOrderStatusFilter)}>
-            {ORDER_STATUS_OPTIONS.map((option) => (
-              <option value={option.value} key={option.value || option.label}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <select value={paymentStatusFilter} onChange={updateFilter(setPaymentStatusFilter)}>
-            {PAYMENT_STATUS_OPTIONS.map((option) => (
-              <option value={option.value} key={option.value || option.label}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <select value={paymentTypeFilter} onChange={updateFilter(setPaymentTypeFilter)}>
-            {PAYMENT_TYPE_OPTIONS.map((option) => (
-              <option value={option.value} key={option.value || option.label}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <button type="button" className="reset-filters-btn" onClick={resetFilters}>
-            Reset
+          <button type="button" className="admin-orders-refresh" onClick={fetchOrders}>
+            <RefreshCw size={17} />
+            Refresh
           </button>
         </div>
-      </section>
 
-      <section className="table-wrapper">
-        {tableLoading && (
-          <div className="orders-table-overlay">
-            <Loader2 size={24} aria-hidden="true" />
+        <div className="admin-orders-stats">
+          <div className="admin-orders-stat">
+            <Package size={20} />
+            <span>Total Orders</span>
+            <strong>{stats.total}</strong>
+          </div>
+
+          <div className="admin-orders-stat warning">
+            <RotateCcw size={20} />
+            <span>Refund Requests</span>
+            <strong>{stats.refundRequested}</strong>
+          </div>
+
+          <div className="admin-orders-stat success">
+            <CheckCircle2 size={20} />
+            <span>Delivered</span>
+            <strong>{stats.delivered}</strong>
+          </div>
+
+          <div className="admin-orders-stat danger">
+            <AlertCircle size={20} />
+            <span>Cancelled / Returned</span>
+            <strong>{stats.cancelledReturned}</strong>
+          </div>
+        </div>
+
+        <div className="admin-orders-toolbar">
+          <label className="admin-orders-search">
+            <Search size={18} />
+            <input
+              type="text"
+              value={searchText}
+              placeholder="Search by order ID, customer, phone, city"
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+          </label>
+
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">All Order Status</option>
+            {orderStatusOptions.map((status) => (
+              <option key={status} value={status}>
+                {orderStatusLabels[status]}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={refundFilter}
+            onChange={(event) => setRefundFilter(event.target.value)}
+          >
+            {refundStatusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status === "all" ? "All Refund Status" : refundStatusLabels[status]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {errorMessage && <div className="admin-orders-alert">{errorMessage}</div>}
+
+        {!errorMessage && filteredOrders.length === 0 && (
+          <div className="admin-orders-empty">
+            <Package size={38} />
+            <h2>No orders found</h2>
+            <p>Try changing your filters or refresh the list.</p>
           </div>
         )}
 
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>Order Status</th>
-              <th>Payment</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+        <div className="admin-orders-list">
+          {filteredOrders.map((order) => {
+            const orderId = getOrderId(order);
+            const refundStatus = order.refundStatus || "not_requested";
+            const refundLoading = actionLoading === `refund-${orderId}`;
+            const orderUpdating = actionLoading === `order-${orderId}`;
+            const paymentUpdating = actionLoading === `payment-${orderId}`;
 
-          <tbody>
-            {orders.length === 0 ? (
-              <tr>
-                <td colSpan="7">
-                  <div className="admin-empty-row">
-                    <PackageSearch size={30} aria-hidden="true" />
-                    <strong>No orders found</strong>
-                    <span>Try changing search or filter criteria.</span>
+            return (
+              <article className="admin-order-card" key={orderId}>
+                <div className="admin-order-main">
+                  <div className="admin-order-id-block">
+                    <span>Order ID</span>
+                    <strong>#{String(orderId).slice(-10).toUpperCase()}</strong>
+                    <p>{formatDate(order.createdAt)}</p>
                   </div>
-                </td>
-              </tr>
-            ) : (
-              orders.map((order) => {
-                const orderStatus = getStatusKey(order.orderStatus, "placed");
-                const paymentStatus = getStatusKey(order.paymentStatus, "pending");
-                const viewLoading = actionLoading === `view-${order._id}`;
-                const invoiceLoading = actionLoading === `invoice-${order._id}`;
-                const refundLoading = actionLoading === `refund-${order._id}`;
-                const canRefund =
-                  order.paymentType === "ONLINE" &&
-                  ["paid", "captured"].includes(paymentStatus);
 
-                return (
-                  <tr key={order._id}>
-                    <td data-label="Order">
-                      <div className="order-id-cell">
-                        <strong>#{String(order._id).slice(-8).toUpperCase()}</strong>
-                        <span>{order._id}</span>
-                      </div>
-                    </td>
+                  <div className="admin-order-customer">
+                    <span>Customer</span>
+                    <strong>{order.address?.name || "N/A"}</strong>
+                    <p>
+                      {order.address?.phone || "No phone"} - {order.address?.city || "No city"}
+                    </p>
+                  </div>
 
-                    <td data-label="Customer">
-                      <div className="customer-cell">
-                        <strong>{getCustomerName(order)}</strong>
-                        <span>{getCustomerEmail(order)}</span>
-                      </div>
-                    </td>
+                  <div className="admin-order-amount">
+                    <span>Total</span>
+                    <strong>{formatPrice(order.totalAmount)}</strong>
+                    <p>{order.items?.length || 0} item(s)</p>
+                  </div>
 
-                    <td data-label="Total">
-                      <strong>{formatPrice(getOrderTotal(order))}</strong>
-                    </td>
+                  <div className="admin-order-actions-top">
+                    <button
+                      type="button"
+                      className="admin-order-icon-btn"
+                      onClick={() => setSelectedOrder(order)}
+                      title="View order details"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </div>
+                </div>
 
-                    <td data-label="Order Status">
-                      <StatusControl
-                        type="order"
-                        status={orderStatus}
-                        orderId={order._id}
-                        options={NEXT_ORDER_STATUSES}
-                        onChange={promptStatusChange}
-                      />
-                    </td>
+                <div className="admin-order-controls">
+                  <label>
+                    <span>Order Status</span>
+                    <select
+                      value={order.orderStatus || "placed"}
+                      disabled={Boolean(actionLoading)}
+                      onChange={(event) =>
+                        handleOrderStatusChange(order, event.target.value)
+                      }
+                    >
+                      {orderStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {orderStatusLabels[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                    <td data-label="Payment">
-                      <StatusControl
-                        type="payment"
-                        status={paymentStatus}
-                        orderId={order._id}
-                        options={NEXT_PAYMENT_STATUSES}
-                        onChange={promptStatusChange}
-                        subLabel={order.paymentType || "NA"}
-                      />
-                    </td>
+                  <label>
+                    <span>Payment Status</span>
+                    <select
+                      value={order.paymentStatus || "pending"}
+                      disabled={Boolean(actionLoading)}
+                      onChange={(event) =>
+                        handlePaymentStatusChange(order, event.target.value)
+                      }
+                    >
+                      {paymentStatusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {paymentStatusLabels[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                    <td data-label="Date">{formatDate(order.createdAt)}</td>
+                  <div className="admin-order-status-stack">
+                    <span
+                      className={`admin-order-status-badge status-${order.orderStatus}`}
+                    >
+                      {orderStatusLabels[order.orderStatus] || order.orderStatus}
+                    </span>
 
-                    <td data-label="Actions">
-                      <div className="actions">
-                        <button type="button" onClick={() => viewOrder(order._id)} disabled={viewLoading}>
-                          {viewLoading ? <Loader2 size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
-                          View
-                        </button>
+                    <span
+                      className={`admin-payment-status-badge payment-${order.paymentStatus}`}
+                    >
+                      <CreditCard size={14} />
+                      {paymentStatusLabels[order.paymentStatus] || order.paymentStatus}
+                    </span>
+                  </div>
+                </div>
 
-                        <button
-                          type="button"
-                          onClick={() => downloadInvoice(order._id)}
-                          disabled={invoiceLoading}
-                        >
-                          {invoiceLoading ? (
-                            <Loader2 size={15} aria-hidden="true" />
-                          ) : (
-                            <FileText size={15} aria-hidden="true" />
-                          )}
-                          Invoice
-                        </button>
+                <div className="admin-refund-box">
+                  <span className={`admin-refund-badge refund-${refundStatus}`}>
+                    {refundStatusLabels[refundStatus] || "Not Requested"}
+                  </span>
 
-                        {canRefund && (
-                          <button
-                            type="button"
-                            className="refund-btn"
-                            onClick={() => refundOrder(order._id)}
-                            disabled={refundLoading}
-                          >
-                            {refundLoading ? (
-                              <Loader2 size={15} aria-hidden="true" />
-                            ) : (
-                              <RotateCcw size={15} aria-hidden="true" />
-                            )}
-                            Refund
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                  <span className="admin-refund-amount">
+                    Refund Amount: {formatPrice(order.refundAmount || 0)}
+                  </span>
+
+                  {order.refundFailureReason && (
+                    <span className="admin-refund-error">
+                      {order.refundFailureReason}
+                    </span>
+                  )}
+
+                  {canProcessRefund(order) && (
+                    <button
+                      type="button"
+                      className="admin-process-refund-btn"
+                      onClick={() => handleProcessRefund(order)}
+                      disabled={Boolean(actionLoading)}
+                    >
+                      {refundLoading ? (
+                        <>
+                          <Loader2 size={16} />
+                          Processing
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw size={16} />
+                          Process Refund
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {(orderUpdating || paymentUpdating) && (
+                  <div className="admin-order-saving">
+                    <Loader2 size={16} />
+                    Updating order...
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
       </section>
 
-      {totalPages > 1 && (
-        <nav className="pagination" aria-label="Order pages">
-          <button
-            type="button"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+      {selectedOrder && (
+        <div
+          className="admin-order-modal-backdrop"
+          role="button"
+          tabIndex={0}
+          onClick={() => setSelectedOrder(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setSelectedOrder(null);
+          }}
+        >
+          <section
+            className="admin-order-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
           >
-            <ChevronLeft size={17} aria-hidden="true" />
-            Prev
-          </button>
+            <div className="admin-order-modal-header">
+              <div>
+                <p>Order Details</p>
+                <h2>#{String(getOrderId(selectedOrder)).slice(-10).toUpperCase()}</h2>
+              </div>
 
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            type="button"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-          >
-            Next
-            <ChevronRight size={17} aria-hidden="true" />
-          </button>
-        </nav>
-      )}
-
-      {confirmDialog.isOpen && (
-        <div className="premium-modal-overlay" role="dialog" aria-modal="true">
-          <div className="premium-modal-card">
-            <AlertTriangle size={38} aria-hidden="true" />
-            <h2>Confirm update</h2>
-            <p>
-              Change <strong>{formatLabel(confirmDialog.type)}</strong> status to{" "}
-              <strong className="highlight-status">{formatLabel(confirmDialog.status)}</strong>?
-            </p>
-
-            <div className="premium-modal-actions">
-              <button type="button" className="cancel-btn" onClick={cancelStatusChange}>
-                Cancel
-              </button>
               <button
                 type="button"
-                className="confirm-btn"
-                onClick={executeStatusChange}
-                disabled={actionLoading === "status"}
+                className="admin-order-icon-btn"
+                onClick={() => setSelectedOrder(null)}
+                title="Close"
               >
-                {actionLoading === "status" ? (
-                  <>
-                    <Loader2 size={17} aria-hidden="true" />
-                    Updating
-                  </>
-                ) : (
-                  "Update"
-                )}
+                <X size={18} />
               </button>
             </div>
-          </div>
-        </div>
-      )}
 
-      {showModal && selectedOrder && (
-        <div className="orders-modal" role="dialog" aria-modal="true" aria-labelledby="order-detail-title">
-          <div className="modal-content">
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="close-btn"
-              aria-label="Close order details"
-            >
-              <X size={20} aria-hidden="true" />
-            </button>
-
-            <div className="modal-heading">
-              <span>
-                <ShoppingBag size={16} aria-hidden="true" />
-                Order details
-              </span>
-              <h2 id="order-detail-title">#{String(selectedOrder._id).slice(-8).toUpperCase()}</h2>
-              <p>{selectedOrder._id}</p>
+            <div className="admin-order-detail-grid">
+              <div>
+                <span>Customer</span>
+                <strong>{selectedOrder.address?.name || "N/A"}</strong>
+              </div>
+              <div>
+                <span>Phone</span>
+                <strong>{selectedOrder.address?.phone || "N/A"}</strong>
+              </div>
+              <div>
+                <span>Payment Type</span>
+                <strong>{selectedOrder.paymentType || "N/A"}</strong>
+              </div>
+              <div>
+                <span>Total Amount</span>
+                <strong>{formatPrice(selectedOrder.totalAmount)}</strong>
+              </div>
             </div>
 
-            <div className="detail-grid">
-              <DetailItem label="Customer" value={getCustomerName(selectedOrder)} />
-              <DetailItem label="Email" value={getCustomerEmail(selectedOrder)} />
-              <DetailItem label="Payment Type" value={selectedOrder.paymentType || "NA"} />
-              <DetailItem label="Payment Status" value={formatLabel(selectedOrder.paymentStatus)} />
-              <DetailItem label="Order Status" value={formatLabel(selectedOrder.orderStatus, "Placed")} />
-              <DetailItem label="Created" value={formatDate(selectedOrder.createdAt, true)} />
+            <div className="admin-order-address">
+              <span>Shipping Address</span>
+              <p>
+                {selectedOrder.address?.addressLine || "N/A"},{" "}
+                {selectedOrder.address?.city || ""},{" "}
+                {selectedOrder.address?.district || ""},{" "}
+                {selectedOrder.address?.state || ""} -{" "}
+                {selectedOrder.address?.pincode || ""}
+              </p>
             </div>
 
-            <section className="modal-section">
-              <h3>Items</h3>
-              {normalizeArray(selectedOrder.items).map((item, index) => (
-                <div key={`${item.productId?._id || index}`} className="item">
-                  <div>
-                    <strong>{item.productId?.name || item.name || "Product"}</strong>
-                    <span>Qty {item.quantity || 1}</span>
+            <div className="admin-order-products">
+              {(selectedOrder.items || []).map((item, index) => {
+                const product = getProduct(item);
+                const productId = getProductId(item);
+                const name = product.name || "Product unavailable";
+
+                return (
+                  <div
+                    className="admin-order-product-row"
+                    key={`${productId || "product"}-${index}`}
+                  >
+                    <ProductImage product={product} />
+
+                    <div>
+                      <h3>{name}</h3>
+                      <p>
+                        Qty {item.quantity} - {formatPrice(item.price)}
+                      </p>
+                    </div>
                   </div>
-                  <span>{formatPrice(Number(item.price || 0) * Number(item.quantity || 1))}</span>
-                </div>
-              ))}
-            </section>
-
-            <section className="modal-section">
-              <h3>Shipping Address</h3>
-              <p>{getShippingAddress(selectedOrder) || "Address unavailable"}</p>
-            </section>
-
-            <div className="modal-total">
-              <span>Total amount</span>
-              <strong>{formatPrice(getOrderTotal(selectedOrder))}</strong>
+                );
+              })}
             </div>
-          </div>
+
+            {(selectedOrder.cancelReason || selectedOrder.returnReason) && (
+              <div className="admin-order-address">
+                <span>
+                  {selectedOrder.cancelReason ? "Cancel Reason" : "Return Reason"}
+                </span>
+                <p>{selectedOrder.cancelReason || selectedOrder.returnReason}</p>
+              </div>
+            )}
+
+            {selectedOrder.invoiceUrl && (
+              <a
+                href={getAssetUrl(selectedOrder.invoiceUrl)}
+                target="_blank"
+                rel="noreferrer"
+                className="admin-order-invoice-link"
+              >
+                View Invoice
+              </a>
+            )}
+          </section>
         </div>
       )}
     </main>
   );
 };
-
-const StatusControl = ({ type, status, orderId, options, onChange, subLabel }) => (
-  <div className="status-control">
-    <span className={`pill ${type}-${status}`}>{formatLabel(status)}</span>
-    {subLabel && <small>{subLabel}</small>}
-
-    <select value="" onChange={(event) => onChange(type, orderId, event.target.value)}>
-      <option value="" disabled>
-        Change
-      </option>
-      {options.map((option) => (
-        <option value={option} key={option}>
-          {formatLabel(option)}
-        </option>
-      ))}
-    </select>
-  </div>
-);
-
-const DetailItem = ({ label, value }) => (
-  <div className="detail-item">
-    <span>{label}</span>
-    <strong>{value || "NA"}</strong>
-  </div>
-);
-
-const StateCard = ({ icon: Icon, title, message, actionLabel, onAction, loading }) => (
-  <div className="admin-orders-state-card">
-    <Icon className={loading ? "admin-orders-spinner" : ""} size={34} aria-hidden="true" />
-    <h2>{title}</h2>
-    <p>{message}</p>
-    {actionLabel && (
-      <button type="button" onClick={onAction}>
-        {actionLabel}
-      </button>
-    )}
-  </div>
-);
 
 export default OrdersAdmin;

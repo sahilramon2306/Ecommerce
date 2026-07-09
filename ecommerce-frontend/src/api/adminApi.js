@@ -5,27 +5,32 @@ import axiosInstance from "./axiosInstance";
 export const getDashboardOverview = () =>
   axiosInstance.get("/dashboard-Overview");
 
-
 export const getOrdersByMonth = (year) =>
   axiosInstance.get(`/orders-By-Month?year=${year}`);
-
 
 export const getSalesByMonth = (year) =>
   axiosInstance.get(`/sales-By-Month?year=${year}`);
 
-
 export const getTopProducts = (year, limit = 10) =>
   axiosInstance.get(`/top-Products?year=${year}&limit=${limit}`);
-
 
 export const getLowStockProducts = (threshold = 10, page = 1, limit = 10) =>
   axiosInstance.get(`/lowStock-Products?threshold=${threshold}&page=${page}&limit=${limit}`);
 
-
 export const getOrderStatusSummary = (year) =>
   axiosInstance.get(`/order-Status-Summary?year=${year}`);
 
+export const getSalesByCategory = (year) =>
+  axiosInstance.get(`/sales-By-Category?year=${year}`);
 
+export const getTopCustomers = (limit = 10) =>
+  axiosInstance.get(`/top-Customers?limit=${limit}`);
+
+export const getUserGrowthByMonth = (year) =>
+  axiosInstance.get(`/user-Growth-By-Month?year=${year}`);
+
+export const getRecentOrders = (limit = 10) =>
+  axiosInstance.get(`/recent-Orders?limit=${limit}`);
 //============================================================================================
 // ADMIN PRODUCT API's
 export const getAllProductsAdmin = (params) => {
@@ -82,6 +87,11 @@ export const updateProductStatus = (productId, statusData) => {
   );
 };
 
+
+
+export const generateProductContentAdmin = (data) => {
+  return axiosInstance.post("/generate-product-content", data);
+};
 //============================================================================================
 // ADMIN ORDERS API's
 
@@ -132,6 +142,11 @@ export const getOrderInvoiceAdmin = (orderId) => {
 
 // Refund Razorpay Payment (Admin)
 export const refundRazorpayPayment = (orderId) => {
+  return axiosInstance.post(`/refund-Razorpay-Payment/${orderId}`);
+};
+
+
+export const processOrderRefund = (orderId) => {
   return axiosInstance.post(`/refund-Razorpay-Payment/${orderId}`);
 };
 

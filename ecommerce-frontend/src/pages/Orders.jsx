@@ -1,444 +1,359 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  PackageCheck,
-  PackageSearch,
-  Search,
-  ShoppingBag,
-  Truck,
-  X,
-} from "lucide-react";
-import { getMyOrders } from "../api/orderApi";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { cancelOrder, getMyOrders, returnOrder } from "../api/orderApi";
 import "../styles/orders.css";
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "placed", label: "Placed" },
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" },
-];
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
 
-const priceFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+const orderSteps = ["placed", "confirmed", "shipped", "out_for_delivery", "delivered"];
+
+const statusLabels = {
+  placed: "Placed",
+  confirmed: "Confirmed",
+  shipped: "Shipped",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  returned: "Returned"
+};
+
+const refundLabels = {
+  requested: "Refund Requested",
+  processing: "Refund Processing",
+  processed: "Refunded",
+  failed: "Refund Failed"
+};
 
 const formatPrice = (value) => {
-  const number = Number(value);
-  return priceFormatter.format(Number.isFinite(number) ? number : 0);
+  const amount = Number(value || 0);
+  return `Rs. ${amount.toLocaleString("en-IN")}`;
 };
 
-const normalizeArray = (value) => (Array.isArray(value) ? value : []);
+const formatDate = (value) => {
+  if (!value) return "N/A";
 
-const getProductId = (product) => {
-  if (!product) return "";
-  if (typeof product === "object") return product._id || "";
-  return product;
-};
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
 
-const getItemProduct = (item) =>
-  typeof item?.productId === "object" && item.productId ? item.productId : {};
-
-const getItemPrice = (item) => {
-  const product = getItemProduct(item);
-  const value = Number(product.salePrice || product.price || item?.price || 0);
-  return Number.isFinite(value) ? value : 0;
-};
-
-const getOrderTotal = (order) => {
-  const apiTotal = Number(order?.totalAmount);
-  if (Number.isFinite(apiTotal)) return apiTotal;
-
-  return normalizeArray(order?.items).reduce((sum, item) => {
-    return sum + getItemPrice(item) * (Number(item.quantity) || 0);
-  }, 0);
-};
-
-const formatDate = (dateValue) => {
-  if (!dateValue) return "Date unavailable";
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "Date unavailable";
-
-  return date.toLocaleDateString("en-IN", {
-    day: "numeric",
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
   });
 };
 
-const formatStatus = (value, fallback = "Placed") => {
-  const text = value || fallback;
-
-  return String(text)
-    .replace(/[_-]/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+const getImageUrl = (image) => {
+  if (!image) return "";
+  if (/^https?:\/\//i.test(image)) return image;
+  return `${BACKEND_URL}${image.startsWith("/") ? image : `/${image}`}`;
 };
 
-const getStatusKey = (value) =>
-  String(value || "placed")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+const getProductFromItem = (item) => {
+  if (item?.productId && typeof item.productId === "object") {
+    return item.productId;
+  }
 
-const getInitials = (value = "") => {
-  const words = String(value).trim().split(/\s+/).filter(Boolean);
+  return {};
+};
 
-  if (!words.length) return "SC";
+const getProductId = (item) => {
+  if (item?.productId && typeof item.productId === "object") {
+    return item.productId._id;
+  }
 
-  return words
-    .slice(0, 2)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join("");
+  return item?.productId;
+};
+
+const getInitial = (name = "P") => {
+  return String(name).trim().charAt(0).toUpperCase() || "P";
+};
+
+const ProductThumb = ({ product }) => {
+  const [broken, setBroken] = useState(false);
+  const name = product?.name || "Product";
+  const image = getImageUrl(product?.images?.[0]);
+
+  if (!image || broken) {
+    return <div className="order-product-fallback">{getInitial(name)}</div>;
+  }
+
+  return (
+    <img
+      src={image}
+      alt={name}
+      className="order-product-image"
+      onError={() => setBroken(true)}
+    />
+  );
 };
 
 const Orders = () => {
-  const navigate = useNavigate();
-
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [actionLoading, setActionLoading] = useState("");
 
-  useEffect(() => {
-    let isCurrent = true;
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
 
-    const loadOrders = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
+      const response = await getMyOrders();
+      const payload = response.data?.orders || response.data?.data || response.data || [];
 
-        const res = await getMyOrders();
-
-        if (!isCurrent) return;
-        setOrders(normalizeArray(res.data?.data));
-      } catch (error) {
-        console.error("Orders load error:", error);
-
-        if (isCurrent) {
-          setOrders([]);
-          setErrorMessage("We could not load your orders right now.");
-        }
-      } finally {
-        if (isCurrent) setLoading(false);
-      }
-    };
-
-    loadOrders();
-
-    return () => {
-      isCurrent = false;
-    };
+      setOrders(Array.isArray(payload) ? payload : []);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Failed to load your orders");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const stats = useMemo(() => {
-    const delivered = orders.filter(
-      (order) => getStatusKey(order.orderStatus) === "delivered"
-    ).length;
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
-    const active = orders.filter((order) =>
-      ["placed", "processing", "shipped"].includes(getStatusKey(order.orderStatus))
-    ).length;
-
-    const totalSpend = orders.reduce((sum, order) => sum + getOrderTotal(order), 0);
-
-    return {
-      totalOrders: orders.length,
-      active,
-      delivered,
-      totalSpend,
-    };
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [orders]);
 
-  const filteredOrders = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+  const handleCancelOrder = async (orderId) => {
+    const input = window.prompt("Reason for cancellation");
+    if (input === null) return;
 
-    return orders.filter((order) => {
-      const statusKey = getStatusKey(order.orderStatus);
+    const confirmed = window.confirm("Are you sure you want to cancel this order?");
+    if (!confirmed) return;
 
-      if (statusFilter !== "all" && statusKey !== statusFilter) {
-        return false;
-      }
+    try {
+      setActionLoading(`cancel-${orderId}`);
 
-      if (!query) return true;
+      const response = await cancelOrder(orderId, input.trim());
+      alert(response.data?.message || "Order cancelled successfully");
 
-      const orderId = String(order._id || "").toLowerCase();
-      const paymentType = String(order.paymentType || "").toLowerCase();
-      const paymentStatus = String(order.paymentStatus || "").toLowerCase();
+      await fetchOrders();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to cancel order");
+    } finally {
+      setActionLoading("");
+    }
+  };
 
-      const itemMatch = normalizeArray(order.items).some((item) => {
-        const product = getItemProduct(item);
-        return String(product.name || "Product").toLowerCase().includes(query);
-      });
+  const handleReturnOrder = async (orderId) => {
+    const input = window.prompt("Reason for return");
+    if (input === null) return;
 
-      return (
-        orderId.includes(query) ||
-        paymentType.includes(query) ||
-        paymentStatus.includes(query) ||
-        statusKey.includes(query) ||
-        itemMatch
-      );
-    });
-  }, [orders, searchTerm, statusFilter]);
+    const reason = input.trim();
+
+    if (!reason) {
+      alert("Please enter a return reason");
+      return;
+    }
+
+    const confirmed = window.confirm("Are you sure you want to return this order?");
+    if (!confirmed) return;
+
+    try {
+      setActionLoading(`return-${orderId}`);
+
+      const response = await returnOrder(orderId, reason);
+      alert(response.data?.message || "Return request submitted successfully");
+
+      await fetchOrders();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to return order");
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const renderProgress = (status) => {
+    const activeIndex = orderSteps.indexOf(status);
+
+    if (activeIndex === -1) {
+      return null;
+    }
+
+    return (
+      <div className="order-progress">
+        {orderSteps.map((step, index) => (
+          <div
+            key={step}
+            className={`order-progress-step ${index <= activeIndex ? "active" : ""}`}
+          >
+            <span />
+            <p>{statusLabels[step]}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
       <main className="orders-page">
-        <div className="orders-shell">
-          <div className="orders-state-card" aria-live="polite" aria-busy="true">
-            <Loader2 className="orders-spinner" size={30} aria-hidden="true" />
-            <h2>Loading orders</h2>
-            <p>Fetching your purchase history.</p>
+        <section className="orders-shell">
+          <div className="orders-header">
+            <p>Orders</p>
+            <h1>My Orders</h1>
+            <span>Track purchases, cancellations, returns, and refunds.</span>
           </div>
-        </div>
-      </main>
-    );
-  }
 
-  if (errorMessage) {
-    return (
-      <main className="orders-page">
-        <div className="orders-shell">
-          <div className="orders-state-card">
-            <PackageSearch size={38} aria-hidden="true" />
-            <h2>Orders unavailable</h2>
-            <p>{errorMessage}</p>
-            <button type="button" onClick={() => window.location.reload()}>
-              Try again
-            </button>
+          <div className="orders-loading">
+            <span />
+            <p>Loading your orders...</p>
           </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!orders.length) {
-    return (
-      <main className="orders-page">
-        <div className="orders-shell">
-          <div className="orders-state-card">
-            <ShoppingBag size={38} aria-hidden="true" />
-            <h2>No orders yet</h2>
-            <p>Start shopping and your orders will appear here with status updates.</p>
-            <button type="button" onClick={() => navigate("/")}>
-              Start shopping
-            </button>
-          </div>
-        </div>
+        </section>
       </main>
     );
   }
 
   return (
     <main className="orders-page">
-      <div className="orders-shell">
-        <Link to="/" className="orders-back-link">
-          <ArrowLeft size={18} aria-hidden="true" />
-          Continue shopping
-        </Link>
-
-        <header className="orders-header">
-          <span>
-            <PackageCheck size={16} aria-hidden="true" />
-            Account orders
-          </span>
-          <h1>My Orders</h1>
-          <p>Track recent purchases, payment status, and order progress in one place.</p>
-        </header>
-
-        <section className="orders-stats" aria-label="Order summary">
+      <section className="orders-shell">
+        <div className="orders-header">
           <div>
-            <span>Total orders</span>
-            <strong>{stats.totalOrders}</strong>
-          </div>
-          <div>
-            <span>Active</span>
-            <strong>{stats.active}</strong>
-          </div>
-          <div>
-            <span>Delivered</span>
-            <strong>{stats.delivered}</strong>
-          </div>
-          <div>
-            <span>Total spend</span>
-            <strong>{formatPrice(stats.totalSpend)}</strong>
-          </div>
-        </section>
-
-        <section className="orders-toolbar" aria-label="Order filters">
-          <div className="orders-search">
-            <Search size={20} aria-hidden="true" />
-            <label className="orders-sr-only" htmlFor="order-search">
-              Search orders
-            </label>
-            <input
-              id="order-search"
-              type="search"
-              placeholder="Search by product, order ID, payment, or status..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm("")}
-                aria-label="Clear search"
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            )}
+            <p>Orders</p>
+            <h1>My Orders</h1>
+            <span>Track purchases, cancellations, returns, and refunds.</span>
           </div>
 
-          <div className="orders-segmented" aria-label="Filter by status">
-            {STATUS_OPTIONS.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                className={statusFilter === option.value ? "is-active" : ""}
-                onClick={() => setStatusFilter(option.value)}
-                aria-pressed={statusFilter === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </section>
+          <button type="button" className="orders-refresh-btn" onClick={fetchOrders}>
+            Refresh
+          </button>
+        </div>
 
-        {filteredOrders.length > 0 ? (
-          <section className="orders-list" aria-label="Orders list">
-            {filteredOrders.map((order) => {
-              const items = normalizeArray(order.items);
-              const statusKey = getStatusKey(order.orderStatus);
-              const total = getOrderTotal(order);
+        {errorMessage && <div className="orders-alert error">{errorMessage}</div>}
 
-              return (
-                <article className="order-card" key={order._id}>
-                  <div className="order-card__header">
-                    <div>
-                      <span className="order-kicker">Order</span>
-                      <h2>#{String(order._id || "").toUpperCase()}</h2>
-                    </div>
-
-                    <div className="order-meta">
-                      <span>
-                        <CalendarDays size={16} aria-hidden="true" />
-                        {formatDate(order.createdAt)}
-                      </span>
-                      <span className={`status-badge status-${statusKey}`}>
-                        {formatStatus(order.orderStatus)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="order-card__body">
-                    {items.map((item, index) => {
-                      const product = getItemProduct(item);
-                      const productId = getProductId(item.productId);
-                      const name = product.name || "Product";
-                      const image = product.images?.[0] || "";
-                      const quantity = Number(item.quantity) || 1;
-                      const price = getItemPrice(item);
-                      const itemTotal = price * quantity;
-
-                      const media = image ? (
-                        <img src={image} alt={name} loading="lazy" />
-                      ) : (
-                        <div className="order-image-fallback" role="img" aria-label={name}>
-                          {getInitials(name)}
-                        </div>
-                      );
-
-                      return (
-                        <div className="order-item" key={`${productId || name}-${index}`}>
-                          {productId ? (
-                            <Link to={`/product/${productId}`} className="order-item__media">
-                              {media}
-                            </Link>
-                          ) : (
-                            <div className="order-item__media">{media}</div>
-                          )}
-
-                          <div className="order-item__info">
-                            {productId ? (
-                              <Link to={`/product/${productId}`}>{name}</Link>
-                            ) : (
-                              <strong>{name}</strong>
-                            )}
-                            <span>
-                              Qty {quantity} • {formatPrice(price)} each
-                            </span>
-                          </div>
-
-                          <div className="order-item__total">
-                            <span>Subtotal</span>
-                            <strong>{formatPrice(itemTotal)}</strong>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="order-card__footer">
-                    <div className="order-payment">
-                      <span>
-                        <CreditCard size={16} aria-hidden="true" />
-                        {formatStatus(order.paymentStatus, "Pending")}
-                      </span>
-                      <span>{order.paymentType || "Payment method unavailable"}</span>
-                    </div>
-
-                    <div className="order-total">
-                      <span>Total paid</span>
-                      <strong>{formatPrice(total)}</strong>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-        ) : (
-          <div className="orders-state-card">
-            <PackageSearch size={38} aria-hidden="true" />
-            <h2>No matching orders</h2>
-            <p>Try changing the search keyword or status filter.</p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm("");
-                setStatusFilter("all");
-              }}
-            >
-              Clear filters
-            </button>
+        {!errorMessage && sortedOrders.length === 0 && (
+          <div className="orders-empty">
+            <h2>No orders yet</h2>
+            <p>Your placed orders will appear here.</p>
+            <Link to="/products">Start Shopping</Link>
           </div>
         )}
 
-        <section className="orders-help-strip" aria-label="Order help">
-          <div>
-            <Truck size={18} aria-hidden="true" />
-            <span>Track shipment updates from your order status.</span>
-          </div>
-          <div>
-            <CheckCircle2 size={18} aria-hidden="true" />
-            <span>Payment confirmation appears after successful verification.</span>
-          </div>
-          <Link to="/help-center">
-            Need help?
-            <ArrowRight size={17} aria-hidden="true" />
-          </Link>
-        </section>
-      </div>
+        <div className="orders-list">
+          {sortedOrders.map((order) => {
+            const orderId = order._id || order.id;
+            const canCancel = ["placed", "confirmed"].includes(order.orderStatus);
+            const canReturn = order.orderStatus === "delivered";
+            const refundLabel = refundLabels[order.refundStatus];
+
+            return (
+              <article className="order-card" key={orderId}>
+                <div className="order-card-top">
+                  <div>
+                    <span className="order-id">Order #{String(orderId).slice(-8).toUpperCase()}</span>
+                    <h2>{formatPrice(order.totalAmount)}</h2>
+                    <p>Placed on {formatDate(order.createdAt)}</p>
+                  </div>
+
+                  <div className="order-badges">
+                    <span className={`status-badge status-${order.orderStatus}`}>
+                      {statusLabels[order.orderStatus] || order.orderStatus}
+                    </span>
+
+                    {refundLabel && (
+                      <span className={`refund-badge refund-${order.refundStatus}`}>
+                        {refundLabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {renderProgress(order.orderStatus)}
+
+                <div className="order-meta-grid">
+                  <div>
+                    <span>Payment</span>
+                    <strong>{order.paymentType || "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span>Payment Status</span>
+                    <strong>{order.paymentStatus || "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span>Items</span>
+                    <strong>{order.items?.length || 0}</strong>
+                  </div>
+                  <div>
+                    <span>Refund Amount</span>
+                    <strong>{formatPrice(order.refundAmount || 0)}</strong>
+                  </div>
+                </div>
+
+                <div className="order-products">
+                  {(order.items || []).map((item, index) => {
+                    const product = getProductFromItem(item);
+                    const productId = getProductId(item);
+                    const name = product.name || "Product unavailable";
+
+                    return (
+                      <div className="order-product" key={`${productId || "item"}-${index}`}>
+                        <ProductThumb product={product} />
+
+                        <div className="order-product-info">
+                          <h3>{name}</h3>
+                          <p>
+                            Qty {item.quantity} · {formatPrice(item.price)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {(order.cancelReason || order.returnReason) && (
+                  <div className="order-reason">
+                    <span>{order.cancelReason ? "Cancel Reason" : "Return Reason"}</span>
+                    <p>{order.cancelReason || order.returnReason}</p>
+                  </div>
+                )}
+
+                <div className="order-actions">
+                  {order.invoiceUrl && (
+                    <a
+                      className="order-link-btn"
+                      href={getImageUrl(order.invoiceUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Invoice
+                    </a>
+                  )}
+
+                  {canCancel && (
+                    <button
+                      type="button"
+                      className="order-action-btn cancel"
+                      onClick={() => handleCancelOrder(orderId)}
+                      disabled={Boolean(actionLoading)}
+                    >
+                      {actionLoading === `cancel-${orderId}` ? "Cancelling..." : "Cancel Order"}
+                    </button>
+                  )}
+
+                  {canReturn && (
+                    <button
+                      type="button"
+                      className="order-action-btn return"
+                      onClick={() => handleReturnOrder(orderId)}
+                      disabled={Boolean(actionLoading)}
+                    >
+                      {actionLoading === `return-${orderId}` ? "Submitting..." : "Return Order"}
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </main>
   );
 };

@@ -395,3 +395,36 @@ button {
     flex-direction: column;
   }
 }
+
+//========================================================================================
+.category-admin .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-admin .modal-actions .btn-cancel,
+.category-admin .modal-actions .btn-submit {
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+  flex: 0 0 160px;
+  height: 48px;
+  padding: 0 16px;
+}
+
+@media (max-width: 640px) {
+  .category-admin .modal-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .category-admin .modal-actions .btn-cancel,
+  .category-admin .modal-actions .btn-submit {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: 0 0 auto;
+  }
+}

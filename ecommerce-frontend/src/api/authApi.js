@@ -5,6 +5,11 @@ export const registerUser = (data) => {
   return axiosInstance.post("/registration", data);
 };
 
+
+export const verifyRegistrationOTP = (data) => {
+  return axiosInstance.post("/verify-Registration-OTP", data);
+};
+
 export const loginUser = (data) => {
   return axiosInstance.post("/user-login", data);
 };
@@ -15,7 +20,7 @@ export const logoutUser = () => {
 
 // Password Reset Functions (Public - No Auth Required)
 export const forgotPassword = (data) => {
-  return axiosInstance.post("/forgot-password", data);
+  return axiosInstance.post("/forgot-Password", data);
 };
 
 export const verifyResetOTP = (data) => {
